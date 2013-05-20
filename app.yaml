@@ -1,0 +1,13 @@
+application: escape3ds
+version: 0
+runtime: go
+api_version: go1
+
+handlers:
+- url: /client
+  static_dir: client
+- url: /
+  static_files: client/index.html
+  upload: client/index.html
+- url: /
+  script: _go_app

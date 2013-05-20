@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html ng-app="escape3ds">
+	<head>
+		<meta charset="utf-8">
+		<meta name="application-name" content="脱出ゲーム作成ツール">
+		<meta name="description" content="Nintendo3DS用の脱出ゲームが作れる無料ツール">
+		<meta name="author" content="Yuta Okano">
+		<meta name="keywords" content="3DS,脱出ゲーム,作成ツール">
+		<link rel="stylesheet" href="/client/jcrop/jquery.Jcrop.min.css"></link>
+		<link rel="stylesheet" href="/client/editor.css"></link>
+		<title>3DS脱出ゲーム作成ツール</title>
+	</head>
+	<body>
+		<noscript>
+			<p>JavaScriptを有効にしてください</p>
+		</noscript>
+		<div ng-view></div>
+		<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.6/angular.min.js"></script>
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
+		<script src="/client/jcrop/jquery.Jcrop.min.js"></script>
+		<script src="/client/model.js"></script>
+		<script src="/client/editor.js"></script>
+	</body>
+</html>

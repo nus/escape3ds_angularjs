@@ -1,0 +1,59 @@
+header {
+}
+
+#content {
+	display: -webkit-box;
+}
+
+#scene_list {
+	color: white;
+	width: 150px;
+	height: 480px;
+}
+
+#scene_list>ul {
+	padding-left: 0px;
+}
+
+#scene_list>ul>li {
+	list-style-type: none;
+	background-image: -webkit-linear-gradient(bottom, black, gray);
+	height: 30px;
+}
+
+#main {
+	width: 350px;
+	height: 480px;
+}
+
+#main>h1 {
+	text-align: center;
+}
+
+#scene {
+	width: 320px;
+	height: 212px;
+	margin-left: auto;
+	margin-right: auto;
+	background-color: black;
+	color: white;
+	text-align: center;
+	line-height: 200px;
+	font-family: sans-serif;
+}
+
+#info {
+	width: 320px;
+	margin-left: auto;
+	margin-right: auto;
+	height: 100%;
+}
+
+#event {
+	width: 300px;
+	height: 480px;
+}
+
+#event>h1 {
+	text-align: center;
+}
