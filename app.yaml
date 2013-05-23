@@ -7,7 +7,4 @@ handlers:
 - url: /client
   static_dir: client
 - url: /
-  static_files: client/index.html
-  upload: client/index.html
-- url: /
   script: _go_app
