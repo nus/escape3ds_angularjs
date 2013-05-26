@@ -36,4 +36,7 @@ func (this *Controller) login(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 	view := new(View)
 	view.login(c, w)
+	
+	oauth := NewOAuth(config)
+	oauth.createHeader()
 }

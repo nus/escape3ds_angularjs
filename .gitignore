@@ -2,3 +2,5 @@
 *.xcworkspacedata
 
 *.xcuserstate
+
+server/config.go
