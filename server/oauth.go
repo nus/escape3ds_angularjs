@@ -1,3 +1,7 @@
+/**
+ * Twitterとの通信
+ * @file
+ */
 package escape3ds
 
 import (
@@ -16,12 +20,22 @@ import (
 	"log"
 )
 
+/**
+ * OAuthの通信を行うクラス
+ * @class
+ */
 type OAuth struct {
 	params map[string]string
 	url string
 	context appengine.Context
 }
 
+/**
+ * OAuthクラスのインスタンス化
+ * @function
+ * @params {appengine.Context} c コンテキスト
+ * @returns {*OAuth} OAuthインスタンス
+ */
 func NewOAuth(c appengine.Context) *OAuth {
 	params := make(map[string]string, 7)
 	params["oauth_callback"] = "http://localhost:8080"
@@ -36,6 +50,12 @@ func NewOAuth(c appengine.Context) *OAuth {
 	return oauth
 }
 
+/**
+ * Twitter へリクエストトークンを要求する
+ * @method
+ * @memberof OAuth
+ * @returns {map[string]string} リクエスト結果
+ */
 func (this *OAuth) requestToken() {
 	// リクエストごとに異なるパラーメタを作成
 	this.params["oauth_nonce"] = this.createNonce()
@@ -54,20 +74,37 @@ func (this *OAuth) requestToken() {
 	header = fmt.Sprintf("OAuth %s", header)
 	log.Printf("%s", header)
 	
-	// リクエスト送信
+	// リクエスト作成
 	request, err := http.NewRequest("POST", this.url, nil)
 	check(this.context, err)
 	request.Header.Add("Authorization", header)
 	
+	// リクエスト送信
 	client := new(http.Client)
 	response, err := client.Do(request)
 	check(this.context, err)
 	
-	result := make([]byte, 1024)
-	response.Body.Read(result)
-	log.Printf("response:%s", result)
+	// レスポンス受信
+	body := make([]byte, 256)
+	response.Body.Read(body)
+	
+	// トークンの取り出し
+	datas := strings.Split(string(body), "&")
+	result := make(map[string]string, len(datas))
+	for i := 0; i < len(datas); i++ {
+		data := strings.Split(datas[i], "=")
+		result[data[0]] = data[1]
+	}
+	
+	return result
 }
 
+/**
+ * oauth_nonce を作成する
+ * @method
+ * @memberof OAuth
+ * @returns {string} oauth_nonce
+ */
 func (this *OAuth) createNonce() string {
 	r := rand.Int63()
 	b := make([]byte, binary.MaxVarintLen64)
@@ -79,6 +116,12 @@ func (this *OAuth) createNonce() string {
 	return e
 }
 
+/**
+ * oauth_signature を作成する
+ * @method
+ * @memberof OAuth
+ * @returns {string} oauth_signature
+ */
 func (this *OAuth) createSignature() string {
 	sort := []string {
 		"oauth_callback",
