@@ -37,6 +37,8 @@ func (this *Controller) login(w http.ResponseWriter, r *http.Request) {
 	view := new(View)
 	view.login(c, w)
 	
-	oauth := NewOAuth(config)
-	oauth.createHeader()
+//	oauth := NewOAuth(c, config)
+//	oauth.requestToken(w)
+	oauth := NewOAuth(c)
+	oauth.requestToken()
 }

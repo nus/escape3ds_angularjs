@@ -1,4 +1,4 @@
-application: escape3ds
+application: escape-3ds
 version: 0
 runtime: go
 api_version: go1
