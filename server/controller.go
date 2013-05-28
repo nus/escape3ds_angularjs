@@ -8,6 +8,8 @@ package escape3ds
 import (
 	"net/http"
 	"appengine"
+	"log"
+	"fmt"
 )
 
 type Controller struct {
@@ -58,5 +60,10 @@ func (this *Controller) oauthCallback(w http.ResponseWriter, r *http.Request) {
 	
 	c := appengine.NewContext(r)
 	oauth := NewOAuth(c)
-	oauth.convertToken(token, verifier)
+	result := oauth.convertToken(token, verifier)
+	log.Printf("RESULT: %#v", result)
+	
+	view := new(View)
+	view.login(c, w)
+	fmt.Fprintf(w, "あなたのidは %s です<br>あなたのユーザ名は %s です", result["user_id"], result["screen_name"])
 }

@@ -245,10 +245,19 @@ func (this *OAuth) redirect(token string, w http.ResponseWriter, r *http.Request
  * @method
  * @param {string} token リクエストトークン
  * @param {string} verifier 認証データ
+ * @returns {map[string]string}
  */
-func (this *OAuth) convertToken(token string, verifier string) {
+func (this *OAuth) convertToken(token string, verifier string) map[string]string {
 	this.params["oauth_token"] = token
 	body := fmt.Sprintf("oauth_verifier=%s", verifier)
 	response := this.request("https://api.twitter.com/oauth/access_token", body)
 	log.Printf("response:%s", response)
+	
+	datas := strings.Split(response, "&")
+	result := make(map[string]string, len(datas))
+	for i := 0; i < len(datas); i++ {
+		data := strings.Split(datas[i], "=")
+		result[data[0]] = data[1]
+	}
+	return result
 }
