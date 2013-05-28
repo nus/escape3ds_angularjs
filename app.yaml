@@ -6,5 +6,5 @@ api_version: go1
 handlers:
 - url: /client
   static_dir: client
-- url: /
+- url: /.*
   script: _go_app
