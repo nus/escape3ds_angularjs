@@ -1,5 +1,6 @@
 /**
  * Twitterとの通信
+ * OAuth 1.0 Revision A
  * @file
  */
 package escape3ds
@@ -14,6 +15,7 @@ import (
 	"fmt"
 	"net/url"
 	"appengine"
+	"appengine/urlfetch"
 	"net/http"
 	"crypto/hmac"
 	"crypto/sha1"
@@ -149,8 +151,7 @@ func (this *OAuth) request(targetUrl string, body string) string {
 		request.Header.Add("Authorization", header)
 	}
 	
-	
-	client := new(http.Client)
+	client := urlfetch.Client(this.context)
 	response, err := client.Do(request)
 	check(this.context, err)
 	
@@ -186,9 +187,9 @@ func (this *OAuth) createHeader() string {
  * @returns {string} oauth_nonce
  */
 func (this *OAuth) createNonce() string {
-	r := rand.Int63()
-	b := make([]byte, binary.MaxVarintLen64)
-	binary.PutVarint(b, r)
+	r := rand.Int31()
+	b := make([]byte, binary.MaxVarintLen32)
+	binary.PutVarint(b, int64(r))
 	e := base64.StdEncoding.EncodeToString(b)
 	e = strings.Replace(e, "+", "", -1)
 	e = strings.Replace(e, "/", "", -1)
@@ -234,9 +235,9 @@ func (this *OAuth) createSignature(targetUrl string) string {
  * @param {http.ResponseWriter} w 応答先
  * @param {*http.Request} r リクエスト
  */
-func (this *OAuth) redirect(token string, w http.ResponseWriter, r *http.Request) {
+func (this *OAuth) createTwitterButton(token string, w http.ResponseWriter, r *http.Request) {
 	targetUrl := fmt.Sprintf("https://api.twitter.com/oauth/authenticate?oauth_token=%s", token)
-	fmt.Fprintf(w, `<a href="%s"><img src="/client/img/sign-in-with-twitter-gray.png"/></a>`, targetUrl)
+	fmt.Fprintf(w, `<a href="%s"><img src="/client/img/sign_in_with_twitter.png"/></a>`, targetUrl)
 }
 
 /**

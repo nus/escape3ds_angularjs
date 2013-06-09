@@ -8,6 +8,7 @@ package escape3ds
 import (
 	"net/http"
 	"appengine"
+	"appengine/user"
 	"log"
 	"fmt"
 )
@@ -44,7 +45,10 @@ func (this *Controller) login(w http.ResponseWriter, r *http.Request) {
 	
 	oauth := NewOAuth(c)
 	tokens := oauth.requestToken()
-	oauth.redirect(tokens["oauth_token"], w, r)
+	oauth.createTwitterButton(tokens["oauth_token"], w, r)
+	
+	u, _ := user.CurrentOAuth(c, "")
+	log.Printf("ユーザ: %#v", u)
 }
 
 /**
@@ -66,4 +70,7 @@ func (this *Controller) oauthCallback(w http.ResponseWriter, r *http.Request) {
 	view := new(View)
 	view.login(c, w)
 	fmt.Fprintf(w, "あなたのidは %s です<br>あなたのユーザ名は %s です", result["user_id"], result["screen_name"])
+	
+	u, _ := user.CurrentOAuth(c, "")
+	log.Printf("ユーザ: %#v", u)
 }
