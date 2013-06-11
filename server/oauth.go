@@ -1,6 +1,6 @@
 /**
  * Twitterとの通信
- * OAuth 1.0 Revision A
+ * OAuth 1.0 Revision A を使う
  * @file
  */
 package escape3ds
@@ -27,6 +27,8 @@ import (
 /**
  * OAuthの通信を行うクラス
  * @class
+ * @param {map[string]string} params oauthパラメータの配列
+ * @param {appengine.Context} context コンテキスト
  */
 type OAuth struct {
 	params map[string]string
@@ -109,10 +111,11 @@ func (this *Reader) Read(p []byte) (int, error) {
  * Twitter へリクエストトークンを要求する
  * @method
  * @memberof OAuth
+ * @param {string} targetUrl リクエスト要求先のURL
  * @returns {map[string]string} リクエスト結果
  */
-func (this *OAuth) requestToken() map[string]string {
-	response := this.request("https://api.twitter.com/oauth/request_token", "")
+func (this *OAuth) requestToken(targetUrl string) map[string]string {
+	response := this.request(targetUrl, "")
 	datas := strings.Split(response, "&")
 	result := make(map[string]string, len(datas))
 	for i := 0; i < len(datas); i++ {
@@ -133,28 +136,32 @@ func (this *OAuth) requestToken() map[string]string {
  * @returns {string} レスポンス
  */
 func (this *OAuth) request(targetUrl string, body string) string {
+
+	// リクエストごとに変わるパラメータを設定
 	this.params["oauth_nonce"] = this.createNonce()
 	this.params["oauth_timestamp"] = strconv.Itoa(int(time.Now().Unix()))
 	this.params["oauth_signature"] = this.createSignature(targetUrl)
 	
+	// Authorization Header を作成
 	header := this.createHeader()
 	
+	// リクエストの作成
 	var request *http.Request
 	var err error
 	if body == "" {
 		request, err = http.NewRequest("POST", targetUrl, nil)
-		check(this.context, err)
-		request.Header.Add("Authorization", header)
 	} else {
 		request, err = http.NewRequest("POST", targetUrl, NewReader(body))
-		check(this.context, err)
-		request.Header.Add("Authorization", header)
 	}
+	check(this.context, err)
+	request.Header.Add("Authorization", header)
 	
+	// リクエストの送信とレスポンスの受信
 	client := urlfetch.Client(this.context)
 	response, err := client.Do(request)
 	check(this.context, err)
 	
+	// レスポンスボディの読み取り
 	result := make([]byte, 256)
 	response.Body.Read(result)
 	
@@ -162,7 +169,7 @@ func (this *OAuth) request(targetUrl string, body string) string {
 }
 
 /**
- * ヘッダを作成する
+ * Aouthorization ヘッダを作成する
  * @method
  * @memberof OAuth
  * @returns {string} ヘッダ
@@ -219,8 +226,8 @@ func (this *OAuth) createSignature(targetUrl string) string {
 	}
 	paramString := strings.Join(params, "&")
 	baseString := fmt.Sprintf("POST&%s&%s", url.QueryEscape(targetUrl), url.QueryEscape(paramString))
-	signatureKey := fmt.Sprintf("%s&", url.QueryEscape(config["consumer_secret"]))
 	
+	signatureKey := fmt.Sprintf("%s&", url.QueryEscape(config["consumer_secret"]))
 	hash := hmac.New(sha1.New, []byte(signatureKey))
 	hash.Write([]byte(baseString))
 	signature := hash.Sum(nil)
@@ -228,16 +235,18 @@ func (this *OAuth) createSignature(targetUrl string) string {
 }
 
 /**
- * Sign in with Twitter ボタンを作成
+ * 認証ページヘリダイレクトする
  * @memberof OAuth
  * @method
- * @param {string} token リクエストトークン
  * @param {http.ResponseWriter} w 応答先
  * @param {*http.Request} r リクエスト
+ * @param {string} targetUrl リダイレクト先
+ * @param {string} token 未認証リクエストトークン
  */
-func (this *OAuth) createTwitterButton(token string, w http.ResponseWriter, r *http.Request) {
-	targetUrl := fmt.Sprintf("https://api.twitter.com/oauth/authenticate?oauth_token=%s", token)
-	fmt.Fprintf(w, `<a href="%s"><img src="/client/img/sign_in_with_twitter.png"/></a>`, targetUrl)
+func (this *OAuth) authenticate(w http.ResponseWriter, r *http.Request, targetUrl string, token string) {
+	to := fmt.Sprintf("?oauth_token=%s", token)
+	to = strings.Join([]string{targetUrl, to}, "")
+	http.Redirect(w, r, to, 302)
 }
 
 /**
@@ -248,7 +257,7 @@ func (this *OAuth) createTwitterButton(token string, w http.ResponseWriter, r *h
  * @param {string} verifier 認証データ
  * @returns {map[string]string}
  */
-func (this *OAuth) convertToken(token string, verifier string) map[string]string {
+func (this *OAuth) exchangeToken(token string, verifier string) map[string]string {
 	this.params["oauth_token"] = token
 	body := fmt.Sprintf("oauth_verifier=%s", verifier)
 	response := this.request("https://api.twitter.com/oauth/access_token", body)

@@ -8,8 +8,6 @@ package escape3ds
 import (
 	"net/http"
 	"appengine"
-	"appengine/user"
-	"log"
 	"fmt"
 )
 
@@ -25,6 +23,9 @@ type Controller struct {
 func (this *Controller) handle() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		this.login(w, r)
+	})
+	http.HandleFunc("/login_twitter", func(w http.ResponseWriter, r *http.Request) {
+		this.loginTwitter(w, r)
 	})
 	http.HandleFunc("/oauth_callback", func(w http.ResponseWriter, r *http.Request) {
 		this.oauthCallback(w, r)
@@ -42,17 +43,24 @@ func (this *Controller) login(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 	view := new(View)
 	view.login(c, w)
-	
-	oauth := NewOAuth(c)
-	tokens := oauth.requestToken()
-	oauth.createTwitterButton(tokens["oauth_token"], w, r)
-	
-	u, _ := user.CurrentOAuth(c, "")
-	log.Printf("ユーザ: %#v", u)
 }
 
 /**
- * OAuthで他のサイトでログインしてから戻ってきた時
+ * Twitter でログイン
+ * @method
+ * @memberof Controller
+ * @param {http.ResponseWriter} w 応答先
+ * @param {*http.Request} r リクエスト
+ */
+func (this *Controller) loginTwitter(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
+	oauth := NewOAuth(c)
+	result := oauth.requestToken("https://api.twitter.com/oauth/request_token")
+	oauth.authenticate(w, r, "https://api.twitter.com/oauth/authenticate", result["oauth_token"])
+}
+
+/**
+ * OAuth で他のサイトでログインしてから戻ってきた時
  * @method
  * @memberof Controller
  * @param {http.ResponseWriter} w 応答先
@@ -64,13 +72,15 @@ func (this *Controller) oauthCallback(w http.ResponseWriter, r *http.Request) {
 	
 	c := appengine.NewContext(r)
 	oauth := NewOAuth(c)
-	result := oauth.convertToken(token, verifier)
-	log.Printf("RESULT: %#v", result)
+	result := oauth.exchangeToken(token, verifier)
 	
 	view := new(View)
-	view.login(c, w)
-	fmt.Fprintf(w, "あなたのidは %s です<br>あなたのユーザ名は %s です", result["user_id"], result["screen_name"])
 	
-	u, _ := user.CurrentOAuth(c, "")
-	log.Printf("ユーザ: %#v", u)
+	if result["oauth_token"] != "" {
+		view.editor(c, w)
+		fmt.Fprintf(w, "あなたのidは %s です<br>あなたのユーザ名は %s です", result["user_id"], result["screen_name"])
+	} else {
+		view.login(c, w)
+		fmt.Fprintf(w, "ログインに失敗しました")
+	}
 }
