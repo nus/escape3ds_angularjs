@@ -15,7 +15,6 @@ import (
 	"fmt"
 	"net/url"
 	"appengine"
-	"appengine/urlfetch"
 	"net/http"
 	"crypto/hmac"
 	"crypto/sha1"
@@ -25,12 +24,12 @@ import (
 )
 
 /**
- * OAuthの通信を行うクラス
+ * OAuth1.0aの通信を行うクラス
  * @class
  * @param {map[string]string} params oauthパラメータの配列
  * @param {appengine.Context} context コンテキスト
  */
-type OAuth struct {
+type OAuth1 struct {
 	params map[string]string
 	context appengine.Context
 }
@@ -41,41 +40,17 @@ type OAuth struct {
  * @params {appengine.Context} c コンテキスト
  * @returns {*OAuth} OAuthインスタンス
  */
-func NewOAuth(c appengine.Context) *OAuth {
+func NewOAuth1(c appengine.Context) *OAuth1 {
 	params := make(map[string]string, 7)
 	params["oauth_callback"] = "http://localhost:8080/oauth_callback"
 	params["oauth_consumer_key"] = config["consumer_key"]
 	params["oauth_signature_method"] = "HMAC-SHA1"
 	params["oauth_version"] = "1.0"
 	
-	oauth := new(OAuth)
+	oauth := new(OAuth1)
 	oauth.params = params
 	oauth.context = c
 	return oauth
-}
-
-/**
- * リクエストボディ用のリーダー
- * @class
- * @member {[]byte} body 本文
- * @member {int} pointer 何バイト目まで読み込んだか表すポインタ
- */
-type Reader struct {
-	io.Reader
-	body []byte
-	pointer int
-}
-
-/**
- * リーダーの作成
- * @param {string} body 本文
- * @returns {*Reader} 作成したインスタンス
- */
-func NewReader(body string) *Reader {
-	reader := new(Reader)
-	reader.body = []byte(body)
-	reader.pointer = 0
-	return reader
 }
 
 /**
@@ -110,11 +85,11 @@ func (this *Reader) Read(p []byte) (int, error) {
 /**
  * Twitter へリクエストトークンを要求する
  * @method
- * @memberof OAuth
+ * @memberof OAuth1
  * @param {string} targetUrl リクエスト要求先のURL
  * @returns {map[string]string} リクエスト結果
  */
-func (this *OAuth) requestToken(targetUrl string) map[string]string {
+func (this *OAuth1) requestToken(targetUrl string) map[string]string {
 	response := this.request(targetUrl, "")
 	datas := strings.Split(response, "&")
 	result := make(map[string]string, len(datas))
@@ -130,36 +105,22 @@ func (this *OAuth) requestToken(targetUrl string) map[string]string {
  * リクエストを送信してレスポンスを受信する
  * メソッドは POST 固定
  * @method
- * @memberof OAuth
+ * @memberof OAuth1
  * @param {string} targetUrl 送信先
  * @param {string} body リクエストボディ
  * @returns {string} レスポンス
  */
-func (this *OAuth) request(targetUrl string, body string) string {
+func (this *OAuth1) request(targetUrl string, body string) string {
 
 	// リクエストごとに変わるパラメータを設定
 	this.params["oauth_nonce"] = this.createNonce()
 	this.params["oauth_timestamp"] = strconv.Itoa(int(time.Now().Unix()))
 	this.params["oauth_signature"] = this.createSignature(targetUrl)
 	
-	// Authorization Header を作成
-	header := this.createHeader()
-	
-	// リクエストの作成
-	var request *http.Request
-	var err error
-	if body == "" {
-		request, err = http.NewRequest("POST", targetUrl, nil)
-	} else {
-		request, err = http.NewRequest("POST", targetUrl, NewReader(body))
-	}
-	check(this.context, err)
-	request.Header.Add("Authorization", header)
-	
-	// リクエストの送信とレスポンスの受信
-	client := urlfetch.Client(this.context)
-	response, err := client.Do(request)
-	check(this.context, err)
+	// リクエスト送信
+	params := make(map[string]string, 1)
+	params["Authorization"] = this.createHeader()
+	response := request(this.context, "POST", targetUrl, params, body)
 	
 	// レスポンスボディの読み取り
 	result := make([]byte, 256)
@@ -171,10 +132,10 @@ func (this *OAuth) request(targetUrl string, body string) string {
 /**
  * Aouthorization ヘッダを作成する
  * @method
- * @memberof OAuth
+ * @memberof OAuth1
  * @returns {string} ヘッダ
  */
-func (this *OAuth) createHeader() string {
+func (this *OAuth1) createHeader() string {
 	params := make([]string, 0)
 	for key, val := range this.params {
 		key = url.QueryEscape(key)
@@ -193,7 +154,7 @@ func (this *OAuth) createHeader() string {
  * @memberof OAuth
  * @returns {string} oauth_nonce
  */
-func (this *OAuth) createNonce() string {
+func (this *OAuth1) createNonce() string {
 	r := rand.Int31()
 	b := make([]byte, binary.MaxVarintLen32)
 	binary.PutVarint(b, int64(r))
@@ -207,11 +168,11 @@ func (this *OAuth) createNonce() string {
 /**
  * oauth_signature を作成する
  * @method
- * @memberof OAuth
+ * @memberof OAuth1
  * @param {string} targetUrl リクエスト送信先のURL
  * @returns {string} oauth_signature
  */
-func (this *OAuth) createSignature(targetUrl string) string {
+func (this *OAuth1) createSignature(targetUrl string) string {
 	keys := make([]string, 0)
 	for key := range this.params {
 		keys = append(keys, key)
@@ -236,14 +197,14 @@ func (this *OAuth) createSignature(targetUrl string) string {
 
 /**
  * 認証ページヘリダイレクトする
- * @memberof OAuth
+ * @memberof OAuth1
  * @method
  * @param {http.ResponseWriter} w 応答先
  * @param {*http.Request} r リクエスト
  * @param {string} targetUrl リダイレクト先
  * @param {string} token 未認証リクエストトークン
  */
-func (this *OAuth) authenticate(w http.ResponseWriter, r *http.Request, targetUrl string, token string) {
+func (this *OAuth1) authenticate(w http.ResponseWriter, r *http.Request, targetUrl string, token string) {
 	to := fmt.Sprintf("?oauth_token=%s", token)
 	to = strings.Join([]string{targetUrl, to}, "")
 	http.Redirect(w, r, to, 302)
@@ -251,16 +212,17 @@ func (this *OAuth) authenticate(w http.ResponseWriter, r *http.Request, targetUr
 
 /**
  * リクエストトークンをアクセストークンに変換する
- * @memberof OAuth
+ * @memberof OAuth1
  * @method
  * @param {string} token リクエストトークン
  * @param {string} verifier 認証データ
+ * @param {string} targetUrl リクエストの送信先
  * @returns {map[string]string}
  */
-func (this *OAuth) exchangeToken(token string, verifier string) map[string]string {
+func (this *OAuth1) exchangeToken(token string, verifier string, targetUrl string) map[string]string {
 	this.params["oauth_token"] = token
 	body := fmt.Sprintf("oauth_verifier=%s", verifier)
-	response := this.request("https://api.twitter.com/oauth/access_token", body)
+	response := this.request(targetUrl, body)
 	log.Printf("response:%s", response)
 	
 	datas := strings.Split(response, "&")

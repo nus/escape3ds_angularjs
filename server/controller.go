@@ -27,6 +27,9 @@ func (this *Controller) handle() {
 	http.HandleFunc("/login_twitter", func(w http.ResponseWriter, r *http.Request) {
 		this.loginTwitter(w, r)
 	})
+	http.HandleFunc("/login_facebook", func(w http.ResponseWriter, r *http.Request) {
+		this.loginFacebook(w, r)
+	})
 	http.HandleFunc("/oauth_callback", func(w http.ResponseWriter, r *http.Request) {
 		this.oauthCallback(w, r)
 	})
@@ -54,9 +57,22 @@ func (this *Controller) login(w http.ResponseWriter, r *http.Request) {
  */
 func (this *Controller) loginTwitter(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
-	oauth := NewOAuth(c)
+	oauth := NewOAuth1(c)
 	result := oauth.requestToken("https://api.twitter.com/oauth/request_token")
 	oauth.authenticate(w, r, "https://api.twitter.com/oauth/authenticate", result["oauth_token"])
+}
+
+/**
+ * Facebook でログイン
+ * @method
+ * @memberof Controller
+ * @param {http.ResponseWriter} w 応答先
+ * @param {*http.Request} r リクエスト
+ */
+func (this *Controller) loginFacebook(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
+	oauth := NewOAuth2(c, config["facebook_client_id"])
+	oauth.requestAuthorizationCode("https://www.facebook.com/dialog/oauth", "http://localhost:8080/code_from_facebook")
 }
 
 /**
@@ -71,8 +87,8 @@ func (this *Controller) oauthCallback(w http.ResponseWriter, r *http.Request) {
 	verifier := r.FormValue("oauth_verifier")
 	
 	c := appengine.NewContext(r)
-	oauth := NewOAuth(c)
-	result := oauth.exchangeToken(token, verifier)
+	oauth := NewOAuth1(c)
+	result := oauth.exchangeToken(token, verifier, "https://api.twitter.com/oauth/access_token")
 	
 	view := new(View)
 	
