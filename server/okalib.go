@@ -168,11 +168,12 @@ func request(c appengine.Context, method string, targetUrl string, params map[st
 	
 	if params != nil || len(params) > 0 {
 		if method == "GET" {
-			paramString := ""
+			paramStrings := make([]string, 0)
 			for key, value := range params {
 				param := strings.Join([]string{key, value}, "=")
-				paramString = strings.Join([]string{paramString, param}, "&")
+				paramStrings = append(paramStrings, param)
 			}
+			paramString := strings.Join(paramStrings, "&")
 			targetUrl = strings.Join([]string{targetUrl, paramString}, "?")
 		} else if method == "POST" {
 			for key, value := range params {
