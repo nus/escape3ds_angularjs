@@ -95,13 +95,14 @@ func (this *OAuth2) requestAccessToken(w http.ResponseWriter, r *http.Request, t
  * アクセストークンを使ってAPIを呼び出す
  * @method
  */
-func (this *OAuth2) requestAPI(w http.ResponseWriter, targetUri string, accessToken string) {
+func (this *OAuth2) requestAPI(w http.ResponseWriter, targetUri string, accessToken string) []byte {
 	params := make(map[string]string, 1)
 	params["access_token"] = accessToken
 	response := request(this.context, "GET", targetUri, params, "")
-	fmt.Fprintf(w, "response: %v<br><br>", response)
 	
 	result := make([]byte, 1024)
-	response.Body.Read(result)
-	fmt.Fprintf(w, "BODY: %s<br><br>", result)
+	i, err := response.Body.Read(result)
+	check(this.context, err)
+	result = result[0:i]
+	return result
 }

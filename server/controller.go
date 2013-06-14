@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"appengine"
 	"fmt"
+	"encoding/json"
 )
 
 type Controller struct {
@@ -125,5 +126,15 @@ func (this *Controller) requestFacebookToken(w http.ResponseWriter, r *http.Requ
 	code := r.FormValue("code")
 	oauth := NewOAuth2(c, config["facebook_client_id"], config["facebook_client_secret"])
 	token := oauth.requestAccessToken(w, r, "https://graph.facebook.com/oauth/access_token", url.QueryEscape("http://escape-3ds.appspot.com/callback_facebook"), code)
-	oauth.requestAPI(w, "https://graph.facebook.com/me", token)
+	response := oauth.requestAPI(w, "https://graph.facebook.com/me", token)
+	
+	type UserInfo struct {
+		Id string `json:"id"`
+		Name string `json:"name"`
+	}
+	userInfo := new(UserInfo)
+	err := json.Unmarshal(response, userInfo)
+	check(c, err)
+	
+	fmt.Fprintf(w, "info: %#v", userInfo)
 }
