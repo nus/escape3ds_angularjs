@@ -54,7 +54,7 @@ func NewOAuth2(c appengine.Context, clientId string, clientSecret string) *OAuth
  * @param {string} redirectUri リダイレクトURI
  */
 func (this *OAuth2) requestAuthorizationCode(w http.ResponseWriter, r *http.Request, targetUri string, redirectUri string) {
-	targetUri = fmt.Sprintf("%s?client_id=%s&redirect_uri=%s", targetUri, this.clientId, redirectUri)
+	targetUri = fmt.Sprintf("%s?client_id=%s&redirect_uri=%s&response_type=code", targetUri, this.clientId, redirectUri)
 	http.Redirect(w, r, targetUri, 302)
 }
 
@@ -89,4 +89,19 @@ func (this *OAuth2) requestAccessToken(w http.ResponseWriter, r *http.Request, t
 	responseParams := strings.Split(string(body), "&")
 	tokenParam := strings.Split(responseParams[0], "=")
 	return tokenParam[1]
+}
+
+/**
+ * アクセストークンを使ってAPIを呼び出す
+ * @method
+ */
+func (this *OAuth2) requestAPI(w http.ResponseWriter, targetUri string, accessToken string) {
+	params := make(map[string]string, 1)
+	params["access_token"] = accessToken
+	response := request(this.context, "GET", targetUri, params, "")
+	fmt.Fprintf(w, "response: %v<br><br>", response)
+	
+	result := make([]byte, 1024)
+	response.Body.Read(result)
+	fmt.Fprintf(w, "BODY: %s<br><br>", result)
 }
