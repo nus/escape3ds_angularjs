@@ -1,0 +1,86 @@
+html {
+	background-color: black;
+}
+body {
+	background-color: black;
+	color: white;
+	width: 800px;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+h1 {
+	font-size: 100px;
+	text-align: center;
+	font-family: 'Quantico', sans-serif;
+	height: 100px;
+	margin-top: 30px;
+	margin-bottom: 20px;
+}
+.description {
+	text-align: center;
+	font-size: 25px;
+}
+.logo {
+	background-image: url("/client/img/logo.png");
+	width: 150px;
+	height: 150px;
+	margin-left: auto;
+	margin-right: auto;
+	margin-top: 30px;
+}
+
+.login_block {
+	width: 600px;
+	margin-top: 50px;
+	position: relative;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.sns_login {
+	border-style: solid;
+	border-color: white;
+	border-width: 1px;
+	width: 250px;
+	padding: 10px;
+}
+.sns_login>div {
+	width: 180px;
+	margin-left: auto;
+	margin-right: auto;
+	margin-top: 10px;
+}
+
+.normal_login {
+	position: absolute;
+	top: 0px;
+	left: 300px;
+	border-style: solid;
+	border-color: white;
+	border-width: 1px;
+	width: 250px;
+	padding: 10px;
+}
+
+.trial {
+	position: absolute;
+	top: 150px;
+	left: 0px;
+	border-style: solid;
+	border-color: white;
+	border-width: 1px;
+	width: 250px;
+	padding: 10px;
+}
+
+.registration {
+	position: absolute;
+	top: 150px;
+	left: 300px;
+	border-style: solid;
+	border-color: white;
+	border-width: 1px;
+	width: 250px;
+	padding: 10px;
+}
