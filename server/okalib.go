@@ -55,6 +55,28 @@ func removeItem(s []string, target string) []string {
 }
 
 /**
+ * 文字列配列の中に指定された文字列が存在するかどうか調べる
+ * @function
+ * @param {[]string} arr 文字列配列
+ * @param {string} target 探す文字列
+ * @returns {bool} 存在したらtrue,　それ以外はfalse
+ */
+func exist(arr []string, target string) bool {
+	var i int
+	for i = 0; i < len(arr); i++ {
+		if arr[i] == target {
+			break
+		}
+	}
+	
+	result := false
+	if i < len(arr) {
+		return true
+	}
+	return result
+}
+
+/**
  * 指定されたURLからXMLファイルを受信して返す
  * @function
  * @param {appengine.Context} c コンテキスト
