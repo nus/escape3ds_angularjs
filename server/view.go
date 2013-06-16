@@ -1,5 +1,6 @@
 /**
  * HTMLの表示
+ * @file
  */
 package escape3ds
 
@@ -9,32 +10,59 @@ import(
 	"appengine"
 )
 
+/**
+ * 画面表示を行うクラス
+ * @class
+ * @property {appengine.Context} c コンテキスト
+ * @property {http.ResponseWriter} w 応答先
+ */
 type View struct {
+	c appengine.Context
+	w http.ResponseWriter
+}
 
+/**
+ * View の作成
+ * @function
+ * @param {appengine.Context} c コンテキスト
+ * @returns {*View} 作成したView
+ */
+func NewView(c appengine.Context, w http.ResponseWriter) *View {
+	view := new(View)
+	view.c = c
+	view.w = w
+	return view
 }
 
 /**
  * ログイン画面を表示する
  * @method
  * @memberof View
- * @param {appengine.Context} c コンテキスト
- * @param {http.ResponseWriter} w 応答先
  */
-func (this *View) login(c appengine.Context, w http.ResponseWriter) {
+func (this *View) login() {
 	t, err := template.ParseFiles("server/html/login.html")
-	check(c, err)
-	t.Execute(w, c)
+	check(this.c, err)
+	t.Execute(this.w, this.c)
 }
 
 /**
  * エディタ画面を表示する
  * @method
  * @memberof View
- * @param {appengine.Context} c コンテキスト
- * @param {http.ResponseWriter} w 応答先
  */
-func (this *View) editor(c appengine.Context, w http.ResponseWriter) {
+func (this *View) editor() {
 	t, err := template.ParseFiles("server/html/editor.html")
-	check(c, err)
-	t.Execute(w, c)
+	check(this.c, err)
+	t.Execute(this.w, this.c)
+}
+
+/**
+ * デバッグ画面の表示
+ * @method
+ * @memberof View
+ */
+func (this *View) debug() {
+	t, err := template.ParseFiles("server/html/debug.html")
+	check(this.c, err)
+	t.Execute(this.w, this.c)
 }

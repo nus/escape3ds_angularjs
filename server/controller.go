@@ -13,6 +13,9 @@ import (
 	"encoding/json"
 )
 
+/**
+ * @class
+ */
 type Controller struct {
 
 }
@@ -32,6 +35,8 @@ func (this *Controller) handle() {
 	http.HandleFunc("/login_twitter", func(w http.ResponseWriter, r *http.Request) {
 		this.loginTwitter(w, r)
 	})
+	
+	// Twitter からのコールバック
 	http.HandleFunc("/oauth_callback", func(w http.ResponseWriter, r *http.Request) {
 		this.oauthCallback(w, r)
 	})
@@ -40,12 +45,29 @@ func (this *Controller) handle() {
 	http.HandleFunc("/login_facebook", func(w http.ResponseWriter, r *http.Request) {
 		this.loginFacebook(w, r)
 	})
+	
+	// Facebook からのコールバック
 	http.HandleFunc("/callback_facebook", func(w http.ResponseWriter, r *http.Request) {
 		if(r.FormValue("access_token") == "") {
 			this.requestFacebookToken(w, r)
 		} else {
 			fmt.Fprintf(w, "ログイン完了")
 		}
+	})
+	
+	// ログイン成功したらエディタを表示
+	http.HandleFunc("/editor", func(w http.ResponseWriter, r *http.Request) {
+		this.editor(w, r)
+	})
+	
+	// DEBUG: デバッグページの表示
+	http.HandleFunc("/debug", func(w http.ResponseWriter, r *http.Request) {
+		this.debug(w, r)
+	})
+
+	// API: ユーザの追加
+	http.HandleFunc("/add_user", func(w http.ResponseWriter, r *http.Request) {
+		this.addUser(w, r)
 	})
 }
 
@@ -58,8 +80,8 @@ func (this *Controller) handle() {
  */
 func (this *Controller) login(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
-	view := new(View)
-	view.login(c, w)
+	view := NewView(c, w)
+	view.login()
 }
 
 /**
@@ -91,13 +113,13 @@ func (this *Controller) oauthCallback(w http.ResponseWriter, r *http.Request) {
 	oauth := NewOAuth1(c)
 	result := oauth.exchangeToken(token, verifier, "https://api.twitter.com/oauth/access_token")
 	
-	view := new(View)
+	view := NewView(c, w)
 	
 	if result["oauth_token"] != "" {
-		view.editor(c, w)
+		view.editor()
 		fmt.Fprintf(w, "あなたのidは %s です<br>あなたのユーザ名は %s です", result["user_id"], result["screen_name"])
 	} else {
-		view.login(c, w)
+		view.login()
 		fmt.Fprintf(w, "ログインに失敗しました")
 	}
 }
@@ -137,4 +159,51 @@ func (this *Controller) requestFacebookToken(w http.ResponseWriter, r *http.Requ
 	check(c, err)
 	
 	fmt.Fprintf(w, "info: %#v", userInfo)
+}
+
+/**
+ * エディタの表示
+ * @method
+ * @memberof Controller
+ * @param {http.ResponseWRiter} w 応答先
+ * @param {*http.Request} r リクエスト
+ */
+func (this *Controller) editor(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
+	view := NewView(c, w)
+	view.editor()
+}
+
+/**
+ * ユーザの追加
+ * @method
+ * @memberof Controller
+ * @param {http.ResponseWriter} w 応答先
+ * @param {*http.Request} r リクエスト
+ */
+func (this *Controller) addUser(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
+
+	params := make(map[string]string, 5)
+	params["user_type"] = r.FormValue("user_type")
+	params["user_name"] = r.FormValue("user_name")
+	params["user_pass"] = r.FormValue("user_pass")
+	params["user_mail"] = r.FormValue("user_mail")
+	params["user_oauth_id"] = r.FormValue("user_oauth_id")
+	
+	model := NewModel(c)
+	model.addUser(params)
+}
+
+/**
+ * デバッグツールの表示
+ * @method
+ * @memberof Controller
+ * @param {http.ResponseWriter} w 応答先
+ * @param {*http.Request} r リクエスト
+ */
+func (this *Controller) debug(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
+	view := NewView(c, w)
+	view.debug()
 }
