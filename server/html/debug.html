@@ -6,5 +6,32 @@
 	</head>
 	<body>
 		<h1>デバッグツール</h1>
+		<h2>ユーザの追加</h2>
+		<div id="add_user">
+			<div>
+				<label for="user_type">ユーザ種別</label>
+				<select name="user_type" class="user_type">
+					<option value="Twitter">Twitter</option>
+					<option value="Facebook">Facebook</option>
+					<option value="normal">通常</option>
+				</select>
+			</div>
+			<div>
+				<label>ユーザ名<input type="text" class="user_name"></input></label>
+			</div>
+			<div>
+				<label>パスワード<input type="password" class="user_pass"></input></label>
+			</div>
+			<div>
+				<label>メールアドレス<input type="text" class="user_mail"></input></label>
+			</div>
+			<div>
+				<label>OAuth ID<input type="text" class="user_oauth_id"></input></label>
+			</div>
+			<button class="submit">実行</button>
+		<div>
+		
+		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+		<script src="/client/debug.js"></script>
 	</body>
 </html>

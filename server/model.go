@@ -7,6 +7,8 @@ package escape3ds
 import (
 	"appengine"
 	"appengine/datastore"
+	"crypto/sha1"
+	"strings"
 )
 
 /**
@@ -33,20 +35,19 @@ func NewModel(c appengine.Context) *Model {
 /**
  * ユーザデータ
  * @struct
- * @property {string} user_type ユーザアカウントの種類 "Twitter"/"Facebook"/"normal"
- * @property {string} user_name ユーザ名
- * @property {string} user_pass ユーザのパスワード（user_type == "normal"の場合のみ）
- * @property {string} user_mail ユーザのメールアドレス（user_type == "normal"の場合のみ）
- * @property {string} user_oauth_id OAuthのサービスプロバイダが決めたユーザID
+ * @property {string} Type ユーザアカウントの種類 "Twitter"/"Facebook"/"normal"
+ * @property {string} Name ユーザ名
+ * @property {[]byte} Pass ユーザの暗号化済パスワード（user_type == "normal"の場合のみ）
+ * @property {string} Mail ユーザのメールアドレス（user_type == "normal"の場合のみ）
+ * @property {string} OAuthId OAuthのサービスプロバイダが決めたユーザID
  */
 type User struct {
-	user_id string
-	user_type string
-	user_name string
-	user_pass string
-	user_mail string
-	user_salt string
-	user_oauth_id string
+	Type string
+	Name string
+	Pass []byte
+	Mail string
+	Salt string
+	OAuthId string
 }
 
 /**
@@ -83,13 +84,36 @@ func (this *Model) NewUser(data map[string]string) *User {
 		}
 	}
 	
+	
 	user := new(User)
-	user.user_type = data["user_type"]
-	user.user_name = data["user_name"]
-	user.user_pass = data["user_pass"]
-	user.user_mail = data["user_mail"]
-	user.user_oauth_id = data["user_oauth_id"]
+	user.Type = data["user_type"]
+	user.Name = data["user_name"]
+	user.Mail = data["user_mail"]
+	user.OAuthId = data["user_oauth_id"]
+	user.Pass, user.Salt = this.hashPassword(data["user_pass"])
+	this.c.Infof("pass: %s", user.Pass)
 	return user
+}
+
+/**
+ * ユーザのパスワードをハッシュ化する
+ * @method
+ * @memberof Model
+ * @param {string} pass 平文パスワード
+ * @returns {[]byte} 暗号化されたパスワード
+ * @returns {string} 使用したソルト
+ */
+func (this *Model) hashPassword(pass string) ([]byte, string) {
+	salt := ""
+	for i := 0; i < 4; i++ {
+		salt = strings.Join([]string{salt, getRandomizedString()}, "")
+	}
+	pass = strings.Join([]string{pass, salt}, "")
+	this.c.Infof("salt: %s", salt)
+	hash := sha1.New()
+	hash.Write([]byte(pass))
+	hashedPass := hash.Sum(nil)
+	return hashedPass, salt
 }
 
 /**
