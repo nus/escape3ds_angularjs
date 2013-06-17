@@ -16,6 +16,7 @@ import (
 	"math/rand"
 	"encoding/binary"
 	"encoding/base64"
+	"crypto/sha1"
 )
 
 /**
@@ -239,4 +240,15 @@ func getRandomizedString() string {
 	e = strings.Replace(e, "/", "", -1)
 	e = strings.Replace(e, "=", "", -1)
 	return e
+}
+
+/**
+ * SHA-1で暗号化した文字列を返す
+ * @param {string} 暗号化する文字列
+ * @returns {[]byte} 暗号化されたバイト列
+ */
+func SHA1(input string) []byte {
+	hash := sha1.New()
+	hash.Write([]byte(input))
+	return hash.Sum(nil)
 }

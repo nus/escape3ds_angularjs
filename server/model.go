@@ -7,8 +7,8 @@ package escape3ds
 import (
 	"appengine"
 	"appengine/datastore"
-	"crypto/sha1"
 	"strings"
+	"bytes"
 )
 
 /**
@@ -90,8 +90,7 @@ func (this *Model) NewUser(data map[string]string) *User {
 	user.Name = data["user_name"]
 	user.Mail = data["user_mail"]
 	user.OAuthId = data["user_oauth_id"]
-	user.Pass, user.Salt = this.hashPassword(data["user_pass"])
-	this.c.Infof("pass: %s", user.Pass)
+	user.Pass, user.Salt = this.hashPassword(data["user_pass"], "")
 	return user
 }
 
@@ -100,19 +99,18 @@ func (this *Model) NewUser(data map[string]string) *User {
  * @method
  * @memberof Model
  * @param {string} pass 平文パスワード
+ * @param {string} salt ソルト。空文字が渡された場合は自動で作成する。
  * @returns {[]byte} 暗号化されたパスワード
  * @returns {string} 使用したソルト
  */
-func (this *Model) hashPassword(pass string) ([]byte, string) {
-	salt := ""
-	for i := 0; i < 4; i++ {
-		salt = strings.Join([]string{salt, getRandomizedString()}, "")
+func (this *Model) hashPassword(pass string, salt string) ([]byte, string) {
+	if salt == "" {
+		for i := 0; i < 4; i++ {
+			salt = strings.Join([]string{salt, getRandomizedString()}, "")
+		}
 	}
 	pass = strings.Join([]string{pass, salt}, "")
-	this.c.Infof("salt: %s", salt)
-	hash := sha1.New()
-	hash.Write([]byte(pass))
-	hashedPass := hash.Sum(nil)
+	hashedPass := SHA1(pass)
 	return hashedPass, salt
 }
 
@@ -130,4 +128,51 @@ func (this *Model) addUser(data map[string]string) {
 	key := datastore.NewIncompleteKey(this.c, "User", nil)
 	_, err := datastore.Put(this.c, key, user)
 	check(this.c, err)
+}
+
+/**
+ * 指定されたメールアドレスとパスワードのユーザがいるか調べる
+ * 存在しない場合は戻り値がすべて空文字になる
+ * @method
+ * @memberof Member
+ * @returns {string} エンコードされたキー
+ * @returns {string} ユーザ名
+ */
+func (this *Model) loginCheck(mail string, pass string) (string, string) {
+	query := datastore.NewQuery("User").Filter("Mail =", mail)
+	iterator := query.Run(this.c)
+	key, err := iterator.Next(nil)
+	
+	if err != nil {
+		this.c.Warningf("存在しないメールアドレスによるログインが試されました。アドレス：%s", mail)
+		return "", ""
+	}
+	
+	encodedKey := key.Encode()
+	user := this.getUser(encodedKey)
+	
+	hashedPass, _ := this.hashPassword(pass, user.Salt)
+	if bytes.Compare(user.Pass, hashedPass) != 0 {
+		this.c.Warningf("間違ったパスワードが試されました。アドレス：%s", mail)
+		return "", ""
+	}
+	
+	return encodedKey, user.Name
+}
+
+/**
+ * ユーザの取得
+ * @method
+ * @memberof Model
+ * @param {string} encodedKey エンコードされたキー
+ */
+func (this *Model) getUser(encodedKey string) *User {
+	key, err := datastore.DecodeKey(encodedKey)
+	check(this.c, err)
+	
+	user := new(User)
+	err = datastore.Get(this.c, key, user)
+	check(this.c, err)
+	
+	return user
 }

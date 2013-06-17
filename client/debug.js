@@ -24,4 +24,28 @@ $(function() {
 			}
 		});
 	});
+	
+	// ログイン
+	$('#login .submit').click(function() {
+		var div = $('#login');
+		var data = {};
+		data.mail = div.find('.mail').val();
+		data.pass = div.find('.password').val();
+		
+		$.ajax('/login', {
+			method: 'POST',
+			data: data,
+			dataType: 'json',
+			error: function(xhr, status) {
+				console.log(status);
+			},
+			success: function(data) {
+				if(data.result == false) {
+					alert(data.message);
+				} else {
+					location.href = data.to;
+				}
+			}
+		});
+	});
 });

@@ -28,7 +28,7 @@ type Controller struct {
 func (this *Controller) handle() {
 	// トップ
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		this.login(w, r)
+		this.top(w, r)
 	})
 	
 	// Twitter ログイン
@@ -69,6 +69,11 @@ func (this *Controller) handle() {
 	http.HandleFunc("/add_user", func(w http.ResponseWriter, r *http.Request) {
 		this.addUser(w, r)
 	})
+	
+	// API: ログイン
+	http.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
+		this.login(w, r);
+	})
 }
 
 /**
@@ -78,7 +83,7 @@ func (this *Controller) handle() {
  * @param {http.ResponseWriter} w 応答先
  * @param {*http.Request} r リクエスト
  */
-func (this *Controller) login(w http.ResponseWriter, r *http.Request) {
+func (this *Controller) top(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 	view := NewView(c, w)
 	view.login()
@@ -206,4 +211,28 @@ func (this *Controller) debug(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 	view := NewView(c, w)
 	view.debug()
+}
+
+/**
+ * ログイン
+ * @method
+ * @memberof Controller
+ * @param {http.ResponseWriter} w 応答先
+ * @param {*http.Request} r リクエスト
+ * @returns {Ajax JSON} result 成功したらtrue
+ * @returns {Ajax JSON} to 成功した時のリダイレクト先URL
+ * @returns {Ajax JSON} message 失敗した時のエラーメッセージ
+ */
+func (this *Controller) login(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
+	mail := r.FormValue("mail")
+	pass := r.FormValue("pass")
+	
+	model := NewModel(c)
+	key, _ := model.loginCheck(mail, pass)
+	if key != "" {
+		fmt.Fprintf(w, `{"result":true, "to":"/editor?key=%s"}`, key)
+	} else {
+		fmt.Fprintf(w, `{"result":false, "message":"メールアドレスまたはパスワードが間違っています"}`)
+	}
 }
