@@ -4,7 +4,7 @@
 		<meta charset="utf-8">
 		<title>ESCPAE 3DS</title>
 		<link href="http://fonts.googleapis.com/css?family=Quantico:400,700" rel="stylesheet" type="text/css">
-		<link rel="stylesheet" type="text/css" href="/client/login.css">
+		<link rel="stylesheet" type="text/css" href="/client/css/login.css">
 	</head>
 	<body>
 		<h1>ESCAPE 3DS</h1>
@@ -13,7 +13,7 @@
 		
 		
 		<div class="login_block">
-			<div class="sns_login">
+			<div class="sns_login login_board">
 				SNS でログイン
 				<div>
 					<a href="/login_twitter"><img src="/client/img/sign_in_with_twitter.png"></a>
@@ -23,7 +23,7 @@
 				</div>
 			</div>
 			
-			<div class="normal_login">
+			<div class="normal_login login_board">
 				ログイン
 				<form action="/normal_login" method="post">
 					<label for="mail_address">メールアドレス:</label><input type="text" name="mail_address" id="mail_address"></input>
@@ -33,13 +33,13 @@
 				<a href="">パスワードを忘れた</a>
 			</div>
 			
-			<div class="trial">
+			<div class="trial login_board">
 				おためし
 				<p>とりあえず使ってみたい方はこちらからどうぞ。ゲームは保存できません。</p>
 				<a href="/editor?mode=trial"><button>お試しする</button></a>
 			</div>
 			
-			<div class="registration">
+			<div class="registration login_board">
 				新規登録
 				<form action="/registration" method="post">
 					<label for="mail_address">メールアドレス:</label><input type="text" name="mail_address" id="mail_address"></input>

@@ -38,12 +38,15 @@ h1 {
 	margin-right: auto;
 }
 
-.sns_login {
+.login_board {
 	border-style: solid;
 	border-color: white;
 	border-width: 1px;
-	width: 250px;
 	padding: 10px;
+}
+
+.sns_login {
+	width: 250px;
 }
 .sns_login>div {
 	width: 180px;
@@ -56,31 +59,19 @@ h1 {
 	position: absolute;
 	top: 0px;
 	left: 300px;
-	border-style: solid;
-	border-color: white;
-	border-width: 1px;
 	width: 250px;
-	padding: 10px;
 }
 
 .trial {
 	position: absolute;
 	top: 150px;
 	left: 0px;
-	border-style: solid;
-	border-color: white;
-	border-width: 1px;
 	width: 250px;
-	padding: 10px;
 }
 
 .registration {
 	position: absolute;
 	top: 150px;
 	left: 300px;
-	border-style: solid;
-	border-color: white;
-	border-width: 1px;
 	width: 250px;
-	padding: 10px;
 }
