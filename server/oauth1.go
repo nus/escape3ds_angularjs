@@ -6,9 +6,7 @@
 package escape3ds
 
 import (
-	"math/rand"
 	"encoding/base64"
-	"encoding/binary"
 	"strings"
 	"strconv"
 	"time"
@@ -130,6 +128,21 @@ func (this *OAuth1) request(targetUrl string, body string) string {
 }
 
 /**
+ * oauth_nonce を作成する
+ * @method
+ * @memberof OAuth1
+ * @returns {string} 作成したoauth_nonce
+ */
+func (this *OAuth1) createNonce() string {
+	nonce := ""
+	for i := 0; i < 4; i++ {
+		nonce = strings.Join([]string{nonce, string(getRandomizedString())}, "")
+	}
+	this.context.Infof("nonce: %s", nonce)
+	return nonce
+}
+
+/**
  * Aouthorization ヘッダを作成する
  * @method
  * @memberof OAuth1
@@ -146,23 +159,6 @@ func (this *OAuth1) createHeader() string {
 	header := strings.Join(params, ", ")
 	header = fmt.Sprintf("OAuth %s", header)
 	return header
-}
-
-/**
- * oauth_nonce を作成する
- * @method
- * @memberof OAuth
- * @returns {string} oauth_nonce
- */
-func (this *OAuth1) createNonce() string {
-	r := rand.Int31()
-	b := make([]byte, binary.MaxVarintLen32)
-	binary.PutVarint(b, int64(r))
-	e := base64.StdEncoding.EncodeToString(b)
-	e = strings.Replace(e, "+", "", -1)
-	e = strings.Replace(e, "/", "", -1)
-	e = strings.Replace(e, "=", "", -1)
-	return e
 }
 
 /**

@@ -13,6 +13,9 @@ import (
 	"strings"
 	"log"
 	"io"
+	"math/rand"
+	"encoding/binary"
+	"encoding/base64"
 )
 
 /**
@@ -219,4 +222,21 @@ func request(c appengine.Context, method string, targetUrl string, params map[st
 	check(c, err)
 	
 	return response
+}
+
+/**
+ * ランダムな文字列を取得する
+ * 64bit のランダムデータを Base64 エンコードして記号を抜いたもの
+ * @function
+ * @returns {string} ランダムな文字列
+ */
+func getRandomizedString() string {
+	r := rand.Int63()
+	b := make([]byte, binary.MaxVarintLen64)
+	binary.PutVarint(b, int64(r))
+	e := base64.StdEncoding.EncodeToString(b)
+	e = strings.Replace(e, "+", "", -1)
+	e = strings.Replace(e, "/", "", -1)
+	e = strings.Replace(e, "=", "", -1)
+	return e
 }
