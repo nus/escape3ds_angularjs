@@ -60,6 +60,11 @@ func (this *Controller) handle() {
 		this.editor(w, r)
 	})
 	
+	// 仮登録ページの表示
+	http.HandleFunc("/interim_registration", func(w http.ResponseWriter, r *http.Request) {
+		this.interimRegistration(w, r)
+	})
+	
 	// DEBUG: デバッグページの表示
 	http.HandleFunc("/debug", func(w http.ResponseWriter, r *http.Request) {
 		this.debug(w, r)
@@ -235,4 +240,27 @@ func (this *Controller) login(w http.ResponseWriter, r *http.Request) {
 	} else {
 		fmt.Fprintf(w, `{"result":false, "message":"メールアドレスまたはパスワードが間違っています"}`)
 	}
+}
+
+/**
+ * 仮登録
+ * @method
+ * @memberof Controller
+ * @param {http.ResponseWriter} w 応答先
+ * @param {*http.Request} r リクエスト
+ */
+func (this *Controller) interimRegistration(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
+	
+	name := r.FormValue("name")
+	mail := r.FormValue("mail")
+	pass := r.FormValue("password")
+	
+	model := NewModel(c)
+	key := model.interimRegistration(name, mail, pass)
+	
+	sendMail(c, "infomation@escape-3ds.appspotmail.com", mail, "仮登録完了のお知らせ", fmt.Sprintf(config["interimMailBody"], name, key))
+	
+	view := NewView(c, w)
+	view.interimRegistration()
 }

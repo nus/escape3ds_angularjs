@@ -55,6 +55,13 @@ type User struct {
  * @method
  * @memberof Model
  * @param {map[string]string} ユーザの設定項目を含んだマップ
+ * {
+ *     user_type: string
+ *     user_name: string
+ *     user_mail: string
+ *     user_oauth_id: string
+ *     user_pass: string
+ * }
  * @returns {*User} ユーザ、失敗したらnil
  */
 func (this *Model) NewUser(data map[string]string) *User {
@@ -91,6 +98,35 @@ func (this *Model) NewUser(data map[string]string) *User {
 	user.Mail = data["user_mail"]
 	user.OAuthId = data["user_oauth_id"]
 	user.Pass, user.Salt = this.hashPassword(data["user_pass"], "")
+	return user
+}
+
+/**
+ * 仮登録ユーザ
+ * @struct
+ * @member {string} Name ユーザ名
+ * @member {string} Mail メールアドレス
+ * @member {string} Pass パスワード
+ */
+type InterimUser struct {
+	Name string
+	Mail string
+	Pass string
+}
+
+/**
+ * 仮登録ユーザの作成
+ * @function
+ * @param {string} name ユーザ名
+ * @param {string} mail メールアドレス
+ * @param {string} pass パスワード
+ * @returns {*InterimUser} 仮登録ユーザ
+ */
+func NewInterimUser(name string, mail string, pass string) *InterimUser {
+	user := new(InterimUser)
+	user.Name = name
+	user.Mail = mail
+	user.Pass = pass
 	return user
 }
 
@@ -175,4 +211,23 @@ func (this *Model) getUser(encodedKey string) *User {
 	check(this.c, err)
 	
 	return user
+}
+
+/**
+ * ユーザを仮登録する
+ * 仮登録したユーザは24時間以内に本登録する
+ * 本登録されなかった場合は24時間後に削除される
+ * @method
+ * @memberof Model
+ * @param {string} name ユーザ名
+ * @param {string} mail メールアドレス
+ * @param {string} pass パスワード
+ * @returns {string} 仮登録ユーザのエンコードされたキー
+ */
+func (this *Model) interimRegistration(name string, mail string, pass string) string {
+	user := NewInterimUser(name, mail, pass)
+	key := datastore.NewIncompleteKey(this.c, "InterimUser", nil)
+	_, err := datastore.Put(this.c, key, user)
+	check(this.c, err)
+	return key.Encode()
 }

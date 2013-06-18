@@ -17,8 +17,6 @@ import (
 	"crypto/hmac"
 	"crypto/sha1"
 	"sort"
-	"io"
-	"log"
 )
 
 /**
@@ -49,35 +47,6 @@ func NewOAuth1(c appengine.Context) *OAuth1 {
 	oauth.params = params
 	oauth.context = c
 	return oauth
-}
-
-/**
- * 本文を読み出す
- * ２回目以降は前回の続きから読み出せる
- * @method
- * @memberof *Reader
- * @param {[]byte} p 読みだしたデータの保存先
- * @returns {int} 読みだしたバイト数
- * @returns {error} エラー
- */
-func (this *Reader) Read(p []byte) (int, error) {
-	var l int
-	var err error
-	if this.pointer + len(p) < len(this.body) {
-		l = len(p)
-		err = nil
-	} else {
-		l = len(this.body) - this.pointer
-		err = io.EOF
-	}
-	
-	for i := 0; i < l; i++ {
-		p[i] = this.body[i + this.pointer]
-	}
-	
-	this.pointer = l + this.pointer
-	
-	return l, err
 }
 
 /**
@@ -213,13 +182,12 @@ func (this *OAuth1) authenticate(w http.ResponseWriter, r *http.Request, targetU
  * @param {string} token リクエストトークン
  * @param {string} verifier 認証データ
  * @param {string} targetUrl リクエストの送信先
- * @returns {map[string]string}
+ * @returns {map[string]string} アクセストークンとユーザデータ
  */
 func (this *OAuth1) exchangeToken(token string, verifier string, targetUrl string) map[string]string {
 	this.params["oauth_token"] = token
 	body := fmt.Sprintf("oauth_verifier=%s", verifier)
 	response := this.request(targetUrl, body)
-	log.Printf("response:%s", response)
 	
 	datas := strings.Split(response, "&")
 	result := make(map[string]string, len(datas))

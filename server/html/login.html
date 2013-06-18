@@ -14,17 +14,20 @@
 		
 		<div class="login_block">
 			<div class="sns_login login_board">
-				SNS でログイン
+				- SNS でログイン -
 				<div>
 					<a href="/login_twitter"><img src="/client/img/sign_in_with_twitter.png"></a>
 				</div>
 				<div>
 					<a href="/login_facebook"><img src="/client/img/sign_in_with_facebook.png"></a>
 				</div>
+				<div>
+					※ ログインに使用するだけで<br>　つぶやいたりしません
+				</div>
 			</div>
 			
 			<div class="normal_login login_board">
-				ログイン
+				- ログイン -
 				<form action="/normal_login" method="post">
 					<label for="mail_address">メールアドレス:</label><input type="text" name="mail_address" id="mail_address"></input>
 					<label for="password">パスワード:</label><input type="password" name="password" id="password"></input>
@@ -34,16 +37,23 @@
 			</div>
 			
 			<div class="trial login_board">
-				おためし
+				- おためし -
 				<p>とりあえず使ってみたい方はこちらからどうぞ。ゲームは保存できません。</p>
 				<a href="/editor?mode=trial"><button>お試しする</button></a>
 			</div>
 			
 			<div class="registration login_board">
-				新規登録
-				<form action="/registration" method="post">
-					<label for="mail_address">メールアドレス:</label><input type="text" name="mail_address" id="mail_address"></input>
-					<label for="password">パスワード:</label><input type="password" name="password" id="password"></input>
+				- 新規登録 -
+				<form action="/interim_registration" method="post">
+					<div>
+						<label>ユーザ名：<input type="text" name="name"></input></label>
+					</div>
+					<div>
+						<label>メールアドレス:<input type="text" name="mail"></input></label>
+					</div>
+					<div>
+						<label>パスワード:<input type="password" name="password"></input></label>
+					</div>
 					<input type="submit"></input>
 				</form>
 			</div>
