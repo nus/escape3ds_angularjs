@@ -66,6 +66,11 @@ func (this *Controller) handle() {
 		this.registration(w, r)
 	})
 	
+	// ゲーム一覧の表示
+	http.HandleFunc("/gamelist", func(w http.ResponseWriter, r *http.Request) {
+		this.gamelist(w, r)
+	})
+	
 	// DEBUG: デバッグページの表示
 	http.HandleFunc("/debug", func(w http.ResponseWriter, r *http.Request) {
 		this.debug(w, r)
@@ -267,7 +272,7 @@ func (this *Controller) login(w http.ResponseWriter, r *http.Request) {
 	model := NewModel(c)
 	key, _ := model.loginCheck(mail, pass)
 	if key != "" {
-		fmt.Fprintf(w, `{"result":true, "to":"/editor?key=%s"}`, key)
+		fmt.Fprintf(w, `{"result":true, "to":"/gamelist?key=%s"}`, key)
 	} else {
 		fmt.Fprintf(w, `{"result":false, "message":"メールアドレスまたはパスワードが間違っています"}`)
 	}
@@ -346,4 +351,23 @@ func (this *Controller) callbackFacebook(w http.ResponseWriter, r*http.Request) 
 		key := model.addUser(user)
 		view.editor(key)
 	}
+}
+
+/**
+ * ゲーム一覧の表示
+ * @method
+ * @memberof Controller
+ * @param {http.ResponseWriter} w 応答先
+ * @param {*http.Request} r リクエスト
+ */
+func (this *Controller) gamelist(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
+//	key := r.FormValue("key")
+	
+//	model := NewModel(c)
+//	games := model.getGameList(key)
+
+	view := NewView(c, w)
+//	view.gamelist(games)
+	view.gamelist()
 }

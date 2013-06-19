@@ -1,0 +1,15 @@
+#gamelist {
+	list-style-type: none;
+}
+
+.game {
+	border-style: solid;
+	border-width: 1px;
+	padding: 5px;
+	margin: 5px;
+	width: 300px;
+}
+
+.title {
+	font-size: large;
+}

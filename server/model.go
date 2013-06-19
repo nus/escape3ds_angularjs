@@ -302,3 +302,13 @@ func (this *Model) getUserKey(params map[string]string) string {
 	}
 	return key.Encode()
 }
+
+/**
+ * ユーザが所有しているゲーム一覧を返す
+ * @method
+ * @memberof Model
+ * @param {string} encodedKey ユーザキー
+ */
+func (this *Model) getGameList(encodedKey string) {
+	
+}

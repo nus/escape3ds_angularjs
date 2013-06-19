@@ -89,3 +89,14 @@ func (this *View) registration() {
 	check(this.c, err)
 	t.Execute(this.w, this.c)
 }
+
+/**
+ * ゲーム一覧の表示
+ * @method
+ * @memberof View
+ */
+func (this *View) gamelist() {
+	t, err := template.ParseFiles("server/html/gamelist.html")
+	check(this.c, err)
+	t.Execute(this.w, this.c)
+}
