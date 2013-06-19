@@ -131,6 +131,15 @@ func (this *Controller) callbackTwitter(w http.ResponseWriter, r *http.Request) 
 		// ログイン成功
 		if model.existOAuthUser("Twitter", result["user_id"]) {
 			// 既存ユーザ
+			params := make(map[string]string, 2)
+			params["Type"] = "Twitter"
+			params["OAuthId"] = result["user_id"]
+			key := model.getUserKey(params)
+			if key != "" {
+				view.editor(key)
+			} else {
+				c.Errorf("既存のTwitterのアカウントを検索出来ませんでした")
+			}
 		} else {
 			// 新規ユーザ
 			params := make(map[string]string, 4)
@@ -315,8 +324,17 @@ func (this *Controller) callbackFacebook(w http.ResponseWriter, r*http.Request) 
 	userInfo := this.requestFacebookToken(w, r)
 	
 	model := NewModel(c)
+	view := NewView(c, w)
+	
 	if model.existOAuthUser("Facebook", userInfo["oauth_id"]) {
 		// 既存のユーザ
+		params := make(map[string]string, 2)
+		params["OAuthId"] = userInfo["oauth_id"]
+		params["Type"] = "Facebook"
+		key := model.getUserKey(params)
+		if key != "" {
+			view.editor(key)
+		}
 	} else {
 		// 新規ユーザ
 		params := make(map[string]string, 4)
@@ -326,8 +344,6 @@ func (this *Controller) callbackFacebook(w http.ResponseWriter, r*http.Request) 
 		params["user_pass"] = ""
 		user := model.NewUser(params)
 		key := model.addUser(user)
-		
-		view := NewView(c, w)
 		view.editor(key)
 	}
 }

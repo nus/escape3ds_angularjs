@@ -9,6 +9,7 @@ import (
 	"appengine/datastore"
 	"strings"
 	"bytes"
+	"fmt"
 )
 
 /**
@@ -279,4 +280,25 @@ func (this *Model) existOAuthUser(userType string, oauthId string) bool {
 		return false
 	}
 	return true
+}
+
+/**
+ * パラメータで指定されたユーザを探してキーを返す
+ * 存在しない場合は空文字を返す
+ * @method
+ * @memberof Model
+ * @param {map[string]string} 検索条件
+ * @returns {string} 該当するユーザのキー、または空文字
+ */
+func (this *Model) getUserKey(params map[string]string) string {
+	query := datastore.NewQuery("User")
+	for pkey, pval := range params {
+		query.Filter(fmt.Sprintf("%s =", pkey), pval)
+	}
+	iterator := query.Run(this.c)
+	key, err := iterator.Next(nil)
+	if err != nil {
+		return ""
+	}
+	return key.Encode()
 }
