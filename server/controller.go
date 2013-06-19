@@ -48,11 +48,7 @@ func (this *Controller) handle() {
 	
 	// Facebook からのコールバック
 	http.HandleFunc("/callback_facebook", func(w http.ResponseWriter, r *http.Request) {
-		if(r.FormValue("access_token") == "") {
-			this.requestFacebookToken(w, r)
-		} else {
-			fmt.Fprintf(w, "ログイン完了")
-		}
+		this.callbackFacebook(w, r)
 	})
 	
 	// ログイン成功したらエディタを表示
@@ -108,7 +104,7 @@ func (this *Controller) top(w http.ResponseWriter, r *http.Request) {
  */
 func (this *Controller) loginTwitter(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
-	oauth := NewOAuth1(c, "http://localhost:8080/callback_twitter")
+	oauth := NewOAuth1(c, "http://escape-3ds.appspot.com/callback_twitter")
 	result := oauth.requestToken("https://api.twitter.com/oauth/request_token")
 	oauth.authenticate(w, r, "https://api.twitter.com/oauth/authenticate", result["oauth_token"])
 }
@@ -125,7 +121,7 @@ func (this *Controller) callbackTwitter(w http.ResponseWriter, r *http.Request) 
 	token := r.FormValue("oauth_token")
 	verifier := r.FormValue("oauth_verifier")
 	
-	oauth := NewOAuth1(c, "http://localhost:8080/callback_twitter")
+	oauth := NewOAuth1(c, "http://escape-3ds.appspotcom/callback_twitter")
 	result := oauth.exchangeToken(token, verifier, "https://api.twitter.com/oauth/access_token")
 	
 	view := NewView(c, w)
@@ -140,7 +136,6 @@ func (this *Controller) callbackTwitter(w http.ResponseWriter, r *http.Request) 
 			params := make(map[string]string, 4)
 			params["user_type"] = "Twitter"
 			params["user_name"] = result["screen_name"]
-			params["user_name"] = ""
 			params["user_oauth_id"] = result["user_id"]
 			params["user_pass"] = ""
 			user := model.NewUser(params)
@@ -172,14 +167,16 @@ func (this *Controller) loginFacebook(w http.ResponseWriter, r *http.Request) {
  * この関数は Facebook から認証コードをリダイレクトで渡された時に呼ばれる
  * @param {http.ResponseWriter} w 応答先
  * @param {*http.Request} r リクエスト
+ * @returns {map[string]string} ユーザ情報
  */
-func (this *Controller) requestFacebookToken(w http.ResponseWriter, r *http.Request) {
+func (this *Controller) requestFacebookToken(w http.ResponseWriter, r *http.Request) map[string]string {
 	c := appengine.NewContext(r)
 	code := r.FormValue("code")
 	oauth := NewOAuth2(c, config["facebook_client_id"], config["facebook_client_secret"])
 	token := oauth.requestAccessToken(w, r, "https://graph.facebook.com/oauth/access_token", url.QueryEscape("http://escape-3ds.appspot.com/callback_facebook"), code)
 	response := oauth.requestAPI(w, "https://graph.facebook.com/me", token)
 	
+	// JSON を解析
 	type UserInfo struct {
 		Id string `json:"id"`
 		Name string `json:"name"`
@@ -188,7 +185,10 @@ func (this *Controller) requestFacebookToken(w http.ResponseWriter, r *http.Requ
 	err := json.Unmarshal(response, userInfo)
 	check(c, err)
 	
-	fmt.Fprintf(w, "info: %#v", userInfo)
+	result := make(map[string]string, 2)
+	result["oauth_id"] = userInfo.Id
+	result["name"] = userInfo.Name
+	return result
 }
 
 /**
@@ -303,4 +303,31 @@ func (this *Controller) registration(w http.ResponseWriter, r *http.Request) {
 	
 	view := NewView(c, w)
 	view.registration()
+}
+
+/**
+ * Facebookからのコールバック
+ * @method
+ * @memberof Controller
+ */
+func (this *Controller) callbackFacebook(w http.ResponseWriter, r*http.Request) {
+	c := appengine.NewContext(r)
+	userInfo := this.requestFacebookToken(w, r)
+	
+	model := NewModel(c)
+	if model.existOAuthUser("Facebook", userInfo["oauth_id"]) {
+		// 既存のユーザ
+	} else {
+		// 新規ユーザ
+		params := make(map[string]string, 4)
+		params["user_type"] = "Facebook"
+		params["user_name"] = userInfo["name"]
+		params["user_oauth_id"] = userInfo["oauth_id"]
+		params["user_pass"] = ""
+		user := model.NewUser(params)
+		key := model.addUser(user)
+		
+		view := NewView(c, w)
+		view.editor(key)
+	}
 }
