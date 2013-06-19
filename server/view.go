@@ -77,3 +77,14 @@ func (this *View) interimRegistration() {
 	check(this.c, err)
 	t.Execute(this.w, this.c)
 }
+
+/**
+ * 本登録完了ページの表示
+ * @method
+ * @memberof View
+ */
+func (this *View) registration() {
+	t, err := template.ParseFiles("server/html/registration.html")
+	check(this.c, err)
+	t.Execute(this.w, this.c)
+}

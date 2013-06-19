@@ -154,9 +154,9 @@ func (this *Model) hashPassword(pass string, salt string) ([]byte, string) {
  * ユーザの追加
  * @method
  * @memberof Model
+ * @param {*User} user 追加するユーザ
  */
-func (this *Model) addUser(data map[string]string) {
-	user := this.NewUser(data)
+func (this *Model) addUser(user *User) {
 	if user == nil {
 		this.c.Errorf("ユーザの追加を中止しました")
 		return
@@ -226,8 +226,36 @@ func (this *Model) getUser(encodedKey string) *User {
  */
 func (this *Model) interimRegistration(name string, mail string, pass string) string {
 	user := NewInterimUser(name, mail, pass)
-	key := datastore.NewIncompleteKey(this.c, "InterimUser", nil)
-	_, err := datastore.Put(this.c, key, user)
+	incompleteKey := datastore.NewIncompleteKey(this.c, "InterimUser", nil)
+	completeKey, err := datastore.Put(this.c, incompleteKey, user)
 	check(this.c, err)
-	return key.Encode()
+	return completeKey.Encode()
+}
+
+/**
+ * ユーザを本登録する
+ * 仮登録データベース
+ * @method
+ * @memberof Model
+ * @param {string} encodedKey エンコード済みの仮登録キー
+ */
+func (this *Model) registration(encodedKey string) {
+	key, err := datastore.DecodeKey(encodedKey)
+	check(this.c, err)
+	
+	interimUser := new(InterimUser)
+	err = datastore.Get(this.c, key, interimUser)
+	check(this.c, err)
+	
+	params := make(map[string]string, 5)
+	params["user_type"] = "normal"
+	params["user_name"] = interimUser.Name
+	params["user_mail"] = interimUser.Mail
+	params["user_pass"] = interimUser.Pass
+	params["user_oauth_path"] = ""
+	user := this.NewUser(params)
+	this.addUser(user)
+	
+	err = datastore.Delete(this.c, key)
+	check(this.c, err)
 }

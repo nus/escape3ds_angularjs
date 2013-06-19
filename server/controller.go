@@ -65,6 +65,11 @@ func (this *Controller) handle() {
 		this.interimRegistration(w, r)
 	})
 	
+	// 本登録ページの表示
+	http.HandleFunc("/registration", func(w http.ResponseWriter, r *http.Request) {
+		this.registration(w, r)
+	})
+	
 	// DEBUG: デバッグページの表示
 	http.HandleFunc("/debug", func(w http.ResponseWriter, r *http.Request) {
 		this.debug(w, r)
@@ -202,7 +207,8 @@ func (this *Controller) addUser(w http.ResponseWriter, r *http.Request) {
 	params["user_oauth_id"] = r.FormValue("user_oauth_id")
 	
 	model := NewModel(c)
-	model.addUser(params)
+	user := model.NewUser(params)
+	model.addUser(user)
 }
 
 /**
@@ -263,4 +269,22 @@ func (this *Controller) interimRegistration(w http.ResponseWriter, r *http.Reque
 	
 	view := NewView(c, w)
 	view.interimRegistration()
+}
+
+/**
+ * 本登録する
+ * @method
+ * @memberof Controller
+ * @param {http.ResponseWriter} w 応答先
+ * @param {*http.Request} r リクエスト
+ */
+func (this *Controller) registration(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
+	key := r.FormValue("key")
+	
+	model := NewModel(c)
+	model.registration(key)
+	
+	view := NewView(c, w)
+	view.registration()
 }
