@@ -28,11 +28,13 @@
 			
 			<div class="normal_login login_board">
 				- ログイン -
-				<form action="/normal_login" method="post">
-					<label for="mail_address">メールアドレス:</label><input type="text" name="mail_address" id="mail_address"></input>
-					<label for="password">パスワード:</label><input type="password" name="password" id="password"></input>
-					<input type="submit"></input>
-				</form>
+				<div>
+					<label>メールアドレス:<input type="text" class="mail"></input></label>
+				</div>
+				<div>
+					<label>パスワード:<input type="password" class="pass"></input></label>
+				</div>
+				<button class="submit">送信</button>
 				<a href="">パスワードを忘れた</a>
 			</div>
 			
@@ -58,6 +60,8 @@
 				</form>
 			</div>
 			
+			<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+			<script src="/client/js/login.js"></script>
 		</div>
 	</body>
 </html>

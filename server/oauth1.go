@@ -34,11 +34,12 @@ type OAuth1 struct {
  * OAuthクラスのインスタンス化
  * @function
  * @params {appengine.Context} c コンテキスト
+ * @params{appengine.Context} callback コールバックURL
  * @returns {*OAuth} OAuthインスタンス
  */
-func NewOAuth1(c appengine.Context) *OAuth1 {
+func NewOAuth1(c appengine.Context, callback string) *OAuth1 {
 	params := make(map[string]string, 7)
-	params["oauth_callback"] = "http://localhost:8080/oauth_callback"
+	params["oauth_callback"] = callback
 	params["oauth_consumer_key"] = config["consumer_key"]
 	params["oauth_signature_method"] = "HMAC-SHA1"
 	params["oauth_version"] = "1.0"

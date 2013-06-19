@@ -37,8 +37,8 @@ func (this *Controller) handle() {
 	})
 	
 	// Twitter からのコールバック
-	http.HandleFunc("/oauth_callback", func(w http.ResponseWriter, r *http.Request) {
-		this.oauthCallback(w, r)
+	http.HandleFunc("/callback_twitter", func(w http.ResponseWriter, r *http.Request) {
+		this.callbackTwitter(w, r)
 	})
 	
 	// Facebook ログイン
@@ -108,32 +108,47 @@ func (this *Controller) top(w http.ResponseWriter, r *http.Request) {
  */
 func (this *Controller) loginTwitter(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
-	oauth := NewOAuth1(c)
+	oauth := NewOAuth1(c, "http://localhost:8080/callback_twitter")
 	result := oauth.requestToken("https://api.twitter.com/oauth/request_token")
 	oauth.authenticate(w, r, "https://api.twitter.com/oauth/authenticate", result["oauth_token"])
 }
 
 /**
- * OAuth で他のサイトでログインしてから戻ってきた時
+ * Twitter からのコールバック
  * @method
  * @memberof Controller
  * @param {http.ResponseWriter} w 応答先
  * @param {*http.Request} r リクエスト
  */
-func (this *Controller) oauthCallback(w http.ResponseWriter, r *http.Request) {
+func (this *Controller) callbackTwitter(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
 	token := r.FormValue("oauth_token")
 	verifier := r.FormValue("oauth_verifier")
 	
-	c := appengine.NewContext(r)
-	oauth := NewOAuth1(c)
+	oauth := NewOAuth1(c, "http://localhost:8080/callback_twitter")
 	result := oauth.exchangeToken(token, verifier, "https://api.twitter.com/oauth/access_token")
 	
 	view := NewView(c, w)
+	model := NewModel(c)
 	
 	if result["oauth_token"] != "" {
-		view.editor()
-		fmt.Fprintf(w, "あなたのidは %s です<br>あなたのユーザ名は %s です", result["user_id"], result["screen_name"])
+		// ログイン成功
+		if model.existOAuthUser("Twitter", result["user_id"]) {
+			// 既存ユーザ
+		} else {
+			// 新規ユーザ
+			params := make(map[string]string, 4)
+			params["user_type"] = "Twitter"
+			params["user_name"] = result["screen_name"]
+			params["user_name"] = ""
+			params["user_oauth_id"] = result["user_id"]
+			params["user_pass"] = ""
+			user := model.NewUser(params)
+			key := model.addUser(user)
+			view.editor(key)
+		}
 	} else {
+		// ログイン失敗
 		view.login()
 		fmt.Fprintf(w, "ログインに失敗しました")
 	}
@@ -185,8 +200,9 @@ func (this *Controller) requestFacebookToken(w http.ResponseWriter, r *http.Requ
  */
 func (this *Controller) editor(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
+	key := r.FormValue("key")
 	view := NewView(c, w)
-	view.editor()
+	view.editor(key)
 }
 
 /**

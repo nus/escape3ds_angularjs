@@ -49,8 +49,9 @@ func (this *View) login() {
  * エディタ画面を表示する
  * @method
  * @memberof View
+ * @param {string} key ユーザキー
  */
-func (this *View) editor() {
+func (this *View) editor(key string) {
 	t, err := template.ParseFiles("server/html/editor.html")
 	check(this.c, err)
 	t.Execute(this.w, this.c)

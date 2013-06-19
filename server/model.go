@@ -155,15 +155,18 @@ func (this *Model) hashPassword(pass string, salt string) ([]byte, string) {
  * @method
  * @memberof Model
  * @param {*User} user 追加するユーザ
+ * @returns {string} エンコードされたユーザキー
  */
-func (this *Model) addUser(user *User) {
+func (this *Model) addUser(user *User) string {
 	if user == nil {
 		this.c.Errorf("ユーザの追加を中止しました")
-		return
+		return ""
 	}
-	key := datastore.NewIncompleteKey(this.c, "User", nil)
-	_, err := datastore.Put(this.c, key, user)
+	incompleteKey := datastore.NewIncompleteKey(this.c, "User", nil)
+	completeKey, err := datastore.Put(this.c, incompleteKey, user)
 	check(this.c, err)
+	encodedKey := completeKey.Encode()
+	return encodedKey
 }
 
 /**
@@ -258,4 +261,22 @@ func (this *Model) registration(encodedKey string) {
 	
 	err = datastore.Delete(this.c, key)
 	check(this.c, err)
+}
+
+/**
+ * 指定されたOAuthユーザが既にデータベース上に存在するかどうか調べる
+ * @method
+ * @memberof Model
+ * @param {string} userType "Twitter"または"Facebook"
+ * @param {string} oauthId 調べる対象のOAuthId
+ * @returns {bool} 存在したらtrue
+ */
+func (this *Model) existOAuthUser(userType string, oauthId string) bool {
+	query := datastore.NewQuery("User").Filter("Type =", userType).Filter("OAuthId =", oauthId)
+	iterator := query.Run(this.c)
+	_, err := iterator.Next(nil)
+	if err != nil {
+		return false
+	}
+	return true
 }
