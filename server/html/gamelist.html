@@ -5,7 +5,7 @@
 		<link rel="stylesheet" href="/client/css/gamelist.css"></link>
 		<title>ゲーム一覧</title>
 	</head>
-	<body ng-controller="gameListController">
+	<body>
 		<h1>ゲーム一覧</h1>
 		<button>新規作成</button>
 		<ul id="gamelist">
@@ -37,7 +37,22 @@
 			</li>
 		</ul>
 		
-		<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.6/angular.min.js"></script>
+		<!-- ゲーム新規追加ダイアログ -->
+		<div class="newGameDialog">
+			<div>
+				<label>ゲームの名前: <input type="text" class="name"></input></label>
+			</div>
+			<div>
+				<label>ゲームの説明: <input type="text" class="description"></input></label>
+			</div>
+			<div>
+				<label>画像: <input type="file" class="thumbnail"></input></label>
+			</div>
+		</div>
+		
 		<script src="/client/js/gamelist.js"></script>
+		<script>
+			var userKey = "{{.Key}}";
+		</script>
 	</body>
 </html>

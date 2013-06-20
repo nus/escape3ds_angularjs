@@ -1,7 +1,8 @@
 /**
  + controller.go
- * ユーザからのリクエストに合わせて処理を振り分ける
- * @file
+ * http.HandleFunc() を書きやすくするためクラス化はしない
+ * URL パターンに該当する処理を書く
+ * クラス化されたModelとViewを使って処理を進める
  */
 package escape3ds
 
@@ -14,87 +15,11 @@ import (
 )
 
 /**
- * @class
- */
-type Controller struct {
-
-}
-
-/**
- * URLから処理を振り分ける
- * @method
- * @memberof Controller
- */
-func (this *Controller) handle() {
-	// トップ
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		this.top(w, r)
-	})
-	
-	// Twitter ログイン
-	http.HandleFunc("/login_twitter", func(w http.ResponseWriter, r *http.Request) {
-		this.loginTwitter(w, r)
-	})
-	
-	// Twitter からのコールバック
-	http.HandleFunc("/callback_twitter", func(w http.ResponseWriter, r *http.Request) {
-		this.callbackTwitter(w, r)
-	})
-	
-	// Facebook ログイン
-	http.HandleFunc("/login_facebook", func(w http.ResponseWriter, r *http.Request) {
-		this.loginFacebook(w, r)
-	})
-	
-	// Facebook からのコールバック
-	http.HandleFunc("/callback_facebook", func(w http.ResponseWriter, r *http.Request) {
-		this.callbackFacebook(w, r)
-	})
-	
-	// ログイン成功したらエディタを表示
-	http.HandleFunc("/editor", func(w http.ResponseWriter, r *http.Request) {
-		this.editor(w, r)
-	})
-	
-	// 仮登録ページの表示
-	http.HandleFunc("/interim_registration", func(w http.ResponseWriter, r *http.Request) {
-		this.interimRegistration(w, r)
-	})
-	
-	// 本登録ページの表示
-	http.HandleFunc("/registration", func(w http.ResponseWriter, r *http.Request) {
-		this.registration(w, r)
-	})
-	
-	// ゲーム一覧の表示
-	http.HandleFunc("/gamelist", func(w http.ResponseWriter, r *http.Request) {
-		this.gamelist(w, r)
-	})
-	
-	// DEBUG: デバッグページの表示
-	http.HandleFunc("/debug", func(w http.ResponseWriter, r *http.Request) {
-		this.debug(w, r)
-	})
-
-	// API: ユーザの追加
-	http.HandleFunc("/add_user", func(w http.ResponseWriter, r *http.Request) {
-		this.addUser(w, r)
-	})
-	
-	// API: ログイン
-	http.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
-		this.login(w, r);
-	})
-}
-
-/**
  * ログインページの表示
- * @method
- * @memberof Controller
  * @param {http.ResponseWriter} w 応答先
  * @param {*http.Request} r リクエスト
  */
-func (this *Controller) top(w http.ResponseWriter, r *http.Request) {
+func top(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 	view := NewView(c, w)
 	view.login()
@@ -102,12 +27,10 @@ func (this *Controller) top(w http.ResponseWriter, r *http.Request) {
 
 /**
  * Twitter でログイン
- * @method
- * @memberof Controller
  * @param {http.ResponseWriter} w 応答先
  * @param {*http.Request} r リクエスト
  */
-func (this *Controller) loginTwitter(w http.ResponseWriter, r *http.Request) {
+func loginTwitter(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 	oauth := NewOAuth1(c, "http://escape-3ds.appspot.com/callback_twitter")
 	result := oauth.requestToken("https://api.twitter.com/oauth/request_token")
@@ -115,13 +38,10 @@ func (this *Controller) loginTwitter(w http.ResponseWriter, r *http.Request) {
 }
 
 /**
- * Twitter からのコールバック
- * @method
- * @memberof Controller
- * @param {http.ResponseWriter} w 応答先
+ * Twitter からのコールバック * @param {http.ResponseWriter} w 応答先
  * @param {*http.Request} r リクエスト
  */
-func (this *Controller) callbackTwitter(w http.ResponseWriter, r *http.Request) {
+func callbackTwitter(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 	token := r.FormValue("oauth_token")
 	verifier := r.FormValue("oauth_verifier")
@@ -165,12 +85,10 @@ func (this *Controller) callbackTwitter(w http.ResponseWriter, r *http.Request) 
 
 /**
  * Facebook でログイン
- * @method
- * @memberof Controller
  * @param {http.ResponseWriter} w 応答先
  * @param {*http.Request} r リクエスト
  */
-func (this *Controller) loginFacebook(w http.ResponseWriter, r *http.Request) {
+func loginFacebook(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 	oauth := NewOAuth2(c, config["facebook_client_id"], config["facebook_client_secret"])
 	oauth.requestAuthorizationCode(w, r, "https://www.facebook.com/dialog/oauth", url.QueryEscape("http://escape-3ds.appspot.com/callback_facebook"))
@@ -183,7 +101,7 @@ func (this *Controller) loginFacebook(w http.ResponseWriter, r *http.Request) {
  * @param {*http.Request} r リクエスト
  * @returns {map[string]string} ユーザ情報
  */
-func (this *Controller) requestFacebookToken(w http.ResponseWriter, r *http.Request) map[string]string {
+func requestFacebookToken(w http.ResponseWriter, r *http.Request) map[string]string {
 	c := appengine.NewContext(r)
 	code := r.FormValue("code")
 	oauth := NewOAuth2(c, config["facebook_client_id"], config["facebook_client_secret"])
@@ -207,12 +125,10 @@ func (this *Controller) requestFacebookToken(w http.ResponseWriter, r *http.Requ
 
 /**
  * エディタの表示
- * @method
- * @memberof Controller
  * @param {http.ResponseWRiter} w 応答先
  * @param {*http.Request} r リクエスト
  */
-func (this *Controller) editor(w http.ResponseWriter, r *http.Request) {
+func editor(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 	key := r.FormValue("key")
 	view := NewView(c, w)
@@ -221,12 +137,10 @@ func (this *Controller) editor(w http.ResponseWriter, r *http.Request) {
 
 /**
  * ユーザの追加
- * @method
- * @memberof Controller
  * @param {http.ResponseWriter} w 応答先
  * @param {*http.Request} r リクエスト
  */
-func (this *Controller) addUser(w http.ResponseWriter, r *http.Request) {
+func addUser(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 
 	params := make(map[string]string, 5)
@@ -243,28 +157,23 @@ func (this *Controller) addUser(w http.ResponseWriter, r *http.Request) {
 
 /**
  * デバッグツールの表示
- * @method
- * @memberof Controller
  * @param {http.ResponseWriter} w 応答先
  * @param {*http.Request} r リクエスト
  */
-func (this *Controller) debug(w http.ResponseWriter, r *http.Request) {
+func debug(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 	view := NewView(c, w)
 	view.debug()
 }
 
 /**
- * ログイン
- * @method
- * @memberof Controller
- * @param {http.ResponseWriter} w 応答先
+ * ログイン * @param {http.ResponseWriter} w 応答先
  * @param {*http.Request} r リクエスト
  * @returns {Ajax JSON} result 成功したらtrue
  * @returns {Ajax JSON} to 成功した時のリダイレクト先URL
  * @returns {Ajax JSON} message 失敗した時のエラーメッセージ
  */
-func (this *Controller) login(w http.ResponseWriter, r *http.Request) {
+func login(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 	mail := r.FormValue("mail")
 	pass := r.FormValue("pass")
@@ -280,12 +189,10 @@ func (this *Controller) login(w http.ResponseWriter, r *http.Request) {
 
 /**
  * 仮登録
- * @method
- * @memberof Controller
  * @param {http.ResponseWriter} w 応答先
  * @param {*http.Request} r リクエスト
  */
-func (this *Controller) interimRegistration(w http.ResponseWriter, r *http.Request) {
+func interimRegistration(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 	
 	name := r.FormValue("name")
@@ -303,12 +210,10 @@ func (this *Controller) interimRegistration(w http.ResponseWriter, r *http.Reque
 
 /**
  * 本登録する
- * @method
- * @memberof Controller
  * @param {http.ResponseWriter} w 応答先
  * @param {*http.Request} r リクエスト
  */
-func (this *Controller) registration(w http.ResponseWriter, r *http.Request) {
+func registration(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 	key := r.FormValue("key")
 	
@@ -321,12 +226,10 @@ func (this *Controller) registration(w http.ResponseWriter, r *http.Request) {
 
 /**
  * Facebookからのコールバック
- * @method
- * @memberof Controller
  */
-func (this *Controller) callbackFacebook(w http.ResponseWriter, r*http.Request) {
+func callbackFacebook(w http.ResponseWriter, r*http.Request) {
 	c := appengine.NewContext(r)
-	userInfo := this.requestFacebookToken(w, r)
+	userInfo := requestFacebookToken(w, r)
 	
 	model := NewModel(c)
 	view := NewView(c, w)
@@ -355,12 +258,10 @@ func (this *Controller) callbackFacebook(w http.ResponseWriter, r*http.Request) 
 
 /**
  * ゲーム一覧の表示
- * @method
- * @memberof Controller
  * @param {http.ResponseWriter} w 応答先
  * @param {*http.Request} r リクエスト
  */
-func (this *Controller) gamelist(w http.ResponseWriter, r *http.Request) {
+func gamelist(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 //	key := r.FormValue("key")
 	
@@ -370,4 +271,23 @@ func (this *Controller) gamelist(w http.ResponseWriter, r *http.Request) {
 	view := NewView(c, w)
 //	view.gamelist(games)
 	view.gamelist()
+}
+
+/**
+ * ゲームの新規追加
+ * @param {http.ResponseWriter} w 応答先
+ * @param {*http.Request} r リクエスト
+ */
+func addGame(w http.ResponseWriter, r *http.Request) {
+	
+}
+
+
+/**
+ * 仮登録ユーザ一覧の取得
+ * Ajax で呼び出す
+ * 
+ */
+func getInterimUsers(w http.ResponseWriter, r *http.Request) {
+
 }

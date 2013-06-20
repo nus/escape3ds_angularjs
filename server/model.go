@@ -123,12 +123,52 @@ type InterimUser struct {
  * @param {string} pass パスワード
  * @returns {*InterimUser} 仮登録ユーザ
  */
-func NewInterimUser(name string, mail string, pass string) *InterimUser {
+func (this *Model) NewInterimUser(name string, mail string, pass string) *InterimUser {
 	user := new(InterimUser)
 	user.Name = name
 	user.Mail = mail
 	user.Pass = pass
 	return user
+}
+
+/**
+ * ゲーム
+ * @struct
+ * @member {string} Name ゲーム名
+ * @member {string} Description ゲームの説明
+ * @member {string} Thumbnail サムネイルの画像パス
+ * @member {string} UserKey 所有ユーザのエンコード済みキー
+ * @member {string} FirstScene 最初のシーンのエンコード済みキー
+ */
+type Game struct {
+	Name string
+	Description string
+	Thumbnail string
+	UserKey string
+	FirstScene string
+}
+
+/**
+ * ゲームインスタンスの作成
+ * @method
+ * @memberof Model
+ * @param {map[string]string}
+ * {
+ *     name: string
+ *     description: string
+ *     thumbnail: string
+ *     user_key: string
+ *     first_scene: string
+ * }
+ */
+func (this *Model) NewGame(params map[string]string) *Game {
+	game := new(Game)
+	game.Name = params["name"]
+	game.Description = params["description"]
+	game.Thumbnail = params["thumbnail"]
+	game.UserKey = params["user_key"]
+	game.FirstScene = params["first_scene"]
+	return game
 }
 
 /**
@@ -229,7 +269,7 @@ func (this *Model) getUser(encodedKey string) *User {
  * @returns {string} 仮登録ユーザのエンコードされたキー
  */
 func (this *Model) interimRegistration(name string, mail string, pass string) string {
-	user := NewInterimUser(name, mail, pass)
+	user := this.NewInterimUser(name, mail, pass)
 	incompleteKey := datastore.NewIncompleteKey(this.c, "InterimUser", nil)
 	completeKey, err := datastore.Put(this.c, incompleteKey, user)
 	check(this.c, err)
@@ -304,11 +344,41 @@ func (this *Model) getUserKey(params map[string]string) string {
 }
 
 /**
+ * データストアにゲームを追加する
+ * @param {*Game} game 追加するゲーム
+ * @returns {string} エンコード済みのゲームキー
+ */
+func (this *Model) addGame(game *Game) string {
+	incompleteKey := datastore.NewIncompleteKey(this.c, "Game", nil)
+	completeKey, err := datastore.Put(this.c, incompleteKey, game)
+	check(this.c, err)
+	return completeKey.Encode()
+}
+
+/**
  * ユーザが所有しているゲーム一覧を返す
  * @method
  * @memberof Model
- * @param {string} encodedKey ユーザキー
+ * @param {string} encodedUserKey ユーザキー
+ * @returns {map[string]*Game} エンコード済みのゲームキーとゲームの対応表
  */
-func (this *Model) getGameList(encodedKey string) {
+func (this *Model) getGameList(encodedUserKey string) map[string]*Game {
+	query := datastore.NewQuery("Game")
+	query.Filter("UserKey =", encodedUserKey)
+	iterator := query.Run(this.c)
 	
+	count, err := query.Count(this.c)
+	check(this.c, err)
+	
+	result := make(map[string]*Game, count)
+	for ;; {
+		game := new(Game)
+		gameKey, err := iterator.Next(game)
+		if err != nil {
+			break
+		}
+		result[gameKey.Encode()] = game
+	}
+	
+	return result
 }
