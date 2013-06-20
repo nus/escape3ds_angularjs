@@ -85,6 +85,22 @@ $(function() {
 				console.log('interim user error');
 			}
 		});
+		
+		var users = $('#users select');
+		$.ajax('/get_users', {
+			method: 'GET',
+			dataType: 'json',
+			success: function(data) {
+				users.empty();
+				for(var key in data) {
+					var option = $('<option></option>').html(data[key]).val(key);
+					users.append(option);
+				}
+			},
+			error: function() {
+				console.log('user error');
+			}
+		});
 	};
 	
 	update();

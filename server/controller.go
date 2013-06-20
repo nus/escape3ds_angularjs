@@ -293,11 +293,32 @@ func getInterimUsers(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 	model := NewModel(c)
 	interimUsers := model.getInterimUsers()
-	c.Debugf("interimuser: %#v", interimUsers)
 	
 	// キーと名前だけを返す
 	result := make(map[string]string, len(interimUsers))
 	for key, val := range interimUsers {
+		result[key] = val.Name
+	}
+	
+	bytes, err := json.Marshal(result)
+	check(c, err)
+	fmt.Fprintf(w, "%s", bytes)
+}
+
+/**
+ * ユーザ一覧の取得
+ * Ajax で呼び出す
+ * @function
+ * @param {http.ResponseWriter} w 応答先
+ * @param {*http.Request} r リクエスト
+ */
+func getUsers(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
+	model := NewModel(c)
+	users := model.getAllUser()
+	
+	result := make(map[string]string, len(users))
+	for key, val := range users {
 		result[key] = val.Name
 	}
 	
