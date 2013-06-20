@@ -67,6 +67,26 @@ $(function() {
 		});
 	});
 	
+	// ゲーム追加
+	$('#add_game').click(function() {
+		var name = $('#game_title').val();
+		var description = $('#game_description').val();
+		$.ajax('/add_game', {
+			method: 'POST',
+			data: {
+				game_name: name,
+				game_description: description,
+				user_key: $('#users option:selected').val()
+			},
+			success: function() {
+				console.log('success add game');
+			},
+			error: function() {
+				console.log('error add game');
+			}
+		});
+	});
+	
 	// データの更新
 	var update = function() {
 		var interimUsers = $('#interim_users');

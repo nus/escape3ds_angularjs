@@ -3,6 +3,7 @@
 	<head>
 		<meta charset="utf-8">
 		<title>DEBUG</title>
+		<link rel="stylesheet" href="/client/css/debug.css"></link>
 	</head>
 	<body>
 		<h1>デバッグツール</h1>
@@ -54,9 +55,21 @@
 		
 		<h2>登録済ユーザ一覧</h2>
 		<div id="users">
-			<select size="5">
-				<option>y.okano</option>
-			</select>
+			<div class="left">
+				<select size="10">
+					<option>y.okano</option>
+				</select>
+			</div>
+			<div>
+				<h3>ゲーム追加</h3>
+				<div>
+					<label>タイトル：<input type="text" id="game_title"></input></label>
+				</div>
+				<div>
+					<label>説明：<input type="text" id="game_description"></input></label>
+				</div>
+				<button id="add_game">追加</button>
+			</div>
 		</div>
 		
 		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>

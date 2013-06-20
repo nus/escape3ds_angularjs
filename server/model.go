@@ -167,7 +167,7 @@ func (this *Model) NewGame(params map[string]string) *Game {
 	game.Description = params["description"]
 	game.Thumbnail = params["thumbnail"]
 	game.UserKey = params["user_key"]
-	game.FirstScene = params["first_scene"]
+	game.FirstScene = ""
 	return game
 }
 

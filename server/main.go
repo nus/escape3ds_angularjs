@@ -27,7 +27,7 @@ func init() {
 	// Ajax
 	http.HandleFunc("/add_user", addUser)
 	http.HandleFunc("/login", login)
-	http.HandleFunc("/addgame", addGame)
+	http.HandleFunc("/add_game", addGame)
 	
 	// 管理者専用 通常アクセス
 	http.HandleFunc("/debug", debug)

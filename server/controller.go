@@ -279,7 +279,19 @@ func gamelist(w http.ResponseWriter, r *http.Request) {
  * @param {*http.Request} r リクエスト
  */
 func addGame(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
+	userKey := r.FormValue("user_key")
+	gameName := r.FormValue("game_name")
+	gameDescription := r.FormValue("game_description")
 	
+	model := NewModel(c)
+	params := make(map[string]string, 4)
+	params["name"] = gameName
+	params["description"] = gameDescription
+	params["thumbnail"] = ""
+	params["user_key"] = userKey
+	game := model.NewGame(params)
+	model.addGame(game)
 }
 
 /**
