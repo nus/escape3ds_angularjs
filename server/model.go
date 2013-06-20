@@ -382,3 +382,25 @@ func (this *Model) getGameList(encodedUserKey string) map[string]*Game {
 	
 	return result
 }
+
+/**
+ * 仮登録ユーザ一覧を返す
+ * @returns {map[string]*InterimUser} 仮登録ユーザリスト
+ */
+func (this *Model) getInterimUsers() map[string]*InterimUser {
+	query := datastore.NewQuery("InterimUser")
+	count, err := query.Count(this.c)
+	check(this.c, err)
+	iterator := query.Run(this.c)
+	result := make(map[string]*InterimUser, count)
+	for i := 0; i < count; i++ {
+		user := new(InterimUser)
+		key, err := iterator.Next(user)
+		if err != nil {
+			break
+		}
+		encodedKey := key.Encode()
+		result[encodedKey] = user
+	}
+	return result
+}

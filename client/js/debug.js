@@ -48,4 +48,44 @@ $(function() {
 			}
 		});
 	});
+	
+	// 仮登録ユーザ
+	$('#interim_users .register').click(function() {
+		var selected = $('#interim_users option:selected');
+		var key = selected.val();
+		$.ajax('/registration', {
+			method: 'GET',
+			data: {
+				key: key
+			},
+			success: function() {
+				update();
+			},
+			error: function() {
+				console.log('registration error');
+			}
+		});
+	});
+	
+	// データの更新
+	var update = function() {
+		var interimUsers = $('#interim_users');
+		$.ajax('/get_interim_users', {
+			method: 'GET',
+			dataType: 'json',
+			success: function(data) {
+				var select = interimUsers.find('select');
+				select.empty();
+				for(var key in data) {
+					var option = $('<option></option>').html(data[key]).val(key);
+					select.append(option);
+				}
+			},
+			error: function() {
+				console.log('interim user error');
+			}
+		});
+	};
+	
+	update();
 });

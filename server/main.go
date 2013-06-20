@@ -29,7 +29,6 @@ func init() {
 	http.HandleFunc("/login", login)
 	http.HandleFunc("/addgame", addGame)
 	
-	
 	// 管理者専用 通常アクセス
 	http.HandleFunc("/debug", debug)
 	
