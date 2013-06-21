@@ -7,7 +7,16 @@
 	</head>
 	<body>
 		<h1>ゲーム一覧</h1>
-		<button>新規作成</button>
+		<div class="newGameDialog">
+			<div>
+				<label>ゲームの名前: <input type="text" class="name"></input></label>
+			</div>
+			<div>
+				<label>ゲームの説明: <input type="text" class="description"></input></label>
+			</div>
+			<button id="add_game">新規作成</button>
+		</div>
+		
 		<ul id="gamelist">
 			<li class="game">
 				<div class="title">弟切草</div>
@@ -36,19 +45,6 @@
 				<button class="delete">消す</button>
 			</li>
 		</ul>
-		
-		<!-- ゲーム新規追加ダイアログ -->
-		<div class="newGameDialog">
-			<div>
-				<label>ゲームの名前: <input type="text" class="name"></input></label>
-			</div>
-			<div>
-				<label>ゲームの説明: <input type="text" class="description"></input></label>
-			</div>
-			<div>
-				<label>画像: <input type="file" class="thumbnail"></input></label>
-			</div>
-		</div>
 		
 		<script src="/client/js/gamelist.js"></script>
 		<script>

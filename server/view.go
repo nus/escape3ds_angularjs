@@ -42,7 +42,7 @@ func NewView(c appengine.Context, w http.ResponseWriter) *View {
 func (this *View) login() {
 	t, err := template.ParseFiles("server/html/login.html")
 	check(this.c, err)
-	t.Execute(this.w, this.c)
+	t.Execute(this.w, nil)
 }
 
 /**
@@ -54,7 +54,7 @@ func (this *View) login() {
 func (this *View) editor(key string) {
 	t, err := template.ParseFiles("server/html/editor.html")
 	check(this.c, err)
-	t.Execute(this.w, this.c)
+	t.Execute(this.w, nil)
 }
 
 /**
@@ -65,7 +65,7 @@ func (this *View) editor(key string) {
 func (this *View) debug() {
 	t, err := template.ParseFiles("server/html/debug.html")
 	check(this.c, err)
-	t.Execute(this.w, this.c)
+	t.Execute(this.w, nil)
 }
 
 /**
@@ -76,7 +76,7 @@ func (this *View) debug() {
 func (this *View) interimRegistration() {
 	t, err := template.ParseFiles("server/html/interim_registration.html")
 	check(this.c, err)
-	t.Execute(this.w, this.c)
+	t.Execute(this.w, nil)
 }
 
 /**
@@ -87,16 +87,19 @@ func (this *View) interimRegistration() {
 func (this *View) registration() {
 	t, err := template.ParseFiles("server/html/registration.html")
 	check(this.c, err)
-	t.Execute(this.w, this.c)
+	t.Execute(this.w, nil)
 }
 
 /**
  * ゲーム一覧の表示
  * @method
  * @memberof View
+ * @param {string} userKey エンコード済みのユーザキー
  */
-func (this *View) gamelist() {
+func (this *View) gamelist(userKey string) {
 	t, err := template.ParseFiles("server/html/gamelist.html")
 	check(this.c, err)
-	t.Execute(this.w, this.c)
+	m := make(map[string]string, 1)
+	m["Key"] = userKey
+	t.Execute(this.w, m)
 }

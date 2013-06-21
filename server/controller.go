@@ -263,14 +263,13 @@ func callbackFacebook(w http.ResponseWriter, r*http.Request) {
  */
 func gamelist(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
-//	key := r.FormValue("key")
+	userKey := r.FormValue("key")
 	
 //	model := NewModel(c)
 //	games := model.getGameList(key)
 
 	view := NewView(c, w)
-//	view.gamelist(games)
-	view.gamelist()
+	view.gamelist(userKey)
 }
 
 /**
