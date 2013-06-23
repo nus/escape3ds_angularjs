@@ -259,7 +259,6 @@ func (this *Model) getUser(encodedKey string) *User {
 	
 	return user
 }
-{"pPXn6CIweWaAQntn48uDzeLwAQusir6ezxppCqAQhvDrtOugodwAA":{"e":"2013-06-24 07:08:19.077514 +0000 UTC","u":"ag5kZXZ-ZXNjYXBlLTNkc3IKCxIEVXNlchgBDA"}}
 
 /**
  * ユーザを仮登録する

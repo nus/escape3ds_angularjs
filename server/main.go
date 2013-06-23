@@ -15,14 +15,18 @@ import "net/http"
 func init() {
 	// 通常アクセス
 	http.HandleFunc("/", top)
+	http.HandleFunc("/editor", editor)
+	http.HandleFunc("/gamelist", gamelist)
+	
+	// OAuth 関係
 	http.HandleFunc("/login_twitter", loginTwitter)
 	http.HandleFunc("/callback_twitter", callbackTwitter)
 	http.HandleFunc("/login_facebook", loginFacebook)
 	http.HandleFunc("/callback_facebook", callbackFacebook)
-	http.HandleFunc("/editor", editor)
+
+	// アカウント登録関係
 	http.HandleFunc("/interim_registration", interimRegistration)
 	http.HandleFunc("/registration", registration)
-	http.HandleFunc("/gamelist", gamelist)
 
 	// Ajax
 	http.HandleFunc("/add_user", addUser)

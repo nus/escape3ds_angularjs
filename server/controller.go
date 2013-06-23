@@ -129,6 +129,7 @@ func requestFacebookToken(w http.ResponseWriter, r *http.Request) map[string]str
  * @param {*http.Request} r リクエスト
  */
 func editor(w http.ResponseWriter, r *http.Request) {
+	session(w, r)
 	c := appengine.NewContext(r)
 	key := r.FormValue("key")
 	view := NewView(c, w)
@@ -161,16 +162,9 @@ func addUser(w http.ResponseWriter, r *http.Request) {
  * @param {*http.Request} r リクエスト
  */
 func debug(w http.ResponseWriter, r *http.Request) {
-	cookie := NewCookie("CookieName", "CookieValue", "localhost", "/debug", 24)
-	http.SetCookie(w, cookie)
-	cookie, err := r.Cookie("CookieName")
-	
 	c := appengine.NewContext(r)
 	view := NewView(c, w)
 	view.debug()
-
-	check(c, err)
-	c.Debugf("%#v", cookie)
 }
 
 /**
@@ -269,6 +263,7 @@ func callbackFacebook(w http.ResponseWriter, r*http.Request) {
  * @param {*http.Request} r リクエスト
  */
 func gamelist(w http.ResponseWriter, r *http.Request) {
+	session(w, r)
 	c := appengine.NewContext(r)
 	userKey := r.FormValue("key")
 	
@@ -347,7 +342,9 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 
 /**
  * セッションを開始する
+ * ユーザーキーに関連付いたセッションIDを生成して memcache, cookie に保存する。
  * @function
+ * @returns {string} セッションID
  */
 func startSession(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
@@ -358,5 +355,51 @@ func startSession(w http.ResponseWriter, r *http.Request) {
 	if key == "" {
 		return
 	}
-	model.startSession(key)
+	sessionId := model.startSession(key)
+	cookie := NewCookie("escape3ds", sessionId, "localhost", "/*", 24)
+	http.SetCookie(w, cookie)
+	cookie, err := r.Cookie("CookieName")
+	check(c, err)
+}
+
+/**
+ * Cookieに保存されているセッションIDを取得する
+ * セッションが存在しない場合は空文字を返す
+ * @function
+ * @param {appengine.Context} c コンテキスト
+ * @param {*http.Request} r リクエスト
+ */
+func getSession(c appengine.Context, r *http.Request) string {
+	var result string
+	cookie, err := r.Cookie("escape3ds")
+	if err == http.ErrNoCookie {
+		result = ""
+	} else if err != nil {
+		result = ""
+		c.Errorf(err.Error())
+	} else {
+		result = cookie.Value
+	}
+	return result
+}
+
+/**
+ * セッションチェック
+ * ページ表示時に必ず実行する
+ * クライアントがセッションIDを持っているかどうか調べて
+ * 持っていなければトップページへ飛ばして空文字を返す
+ * 持っていたら対応するユーザIDを返す
+ * @function
+ * @param {http.ResponseWriter} w 応答先
+ * @param {*http.Request} r リクエスト
+ * @returns {string}
+ */
+func session(w http.ResponseWriter, r *http.Request) string {
+	c := appengine.NewContext(r)
+	session := getSession(c, r)
+	if session == "" {
+		http.Redirect(w, r, "/", 302)
+		return ""
+	}
+	return session
 }
