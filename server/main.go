@@ -17,6 +17,7 @@ func init() {
 	http.HandleFunc("/", top)
 	http.HandleFunc("/editor", editor)
 	http.HandleFunc("/gamelist", gamelist)
+	http.HandleFunc("/logout", logout)
 	
 	// OAuth 関係
 	http.HandleFunc("/login_twitter", loginTwitter)

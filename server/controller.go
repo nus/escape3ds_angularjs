@@ -168,7 +168,8 @@ func debug(w http.ResponseWriter, r *http.Request) {
 }
 
 /**
- * ログイン * @param {http.ResponseWriter} w 応答先
+ * ログイン
+ * @param {http.ResponseWriter} w 応答先
  * @param {*http.Request} r リクエスト
  * @returns {Ajax JSON} result 成功したらtrue
  * @returns {Ajax JSON} to 成功した時のリダイレクト先URL
@@ -187,11 +188,33 @@ func login(w http.ResponseWriter, r *http.Request) {
 		if sessionId == "" {
 			startSession(w, r, key)
 		}
+		c.Debugf("session id: %s", sessionId)
 		fmt.Fprintf(w, `{"result":true, "to":"/gamelist?key=%s"}`, key)
 	} else {
 		// ログイン失敗
 		fmt.Fprintf(w, `{"result":false, "message":"メールアドレスまたはパスワードが間違っています"}`)
 	}
+}
+
+/**
+ * ログアウト
+ * クッキーとmemcacheに保存されたセッション情報を削除する
+ * @function
+ * @param {http.ResponseWriter} w 応答先
+ * @param {*http.Request} r リクエスト
+ */
+func logout(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
+	cookie, err := r.Cookie("escape3ds")
+	check(c, err)
+	sessionId := cookie.Value
+	
+	model := NewModel(c)
+	model.removeSession(sessionId)
+	deleteCookie(w)
+	
+	view := NewView(c, w)
+	view.login()
 }
 
 /**
@@ -278,10 +301,6 @@ func gamelist(w http.ResponseWriter, r *http.Request) {
 	session(w, r)
 	c := appengine.NewContext(r)
 	userKey := r.FormValue("key")
-	
-//	model := NewModel(c)
-//	games := model.getGameList(key)
-
 	view := NewView(c, w)
 	view.gamelist(userKey)
 }
@@ -365,7 +384,7 @@ func startSession(w http.ResponseWriter, r *http.Request, key string) {
 	c := appengine.NewContext(r)
 	model := NewModel(c)
 	sessionId := model.startSession(key)
-	cookie := NewCookie("escape3ds", sessionId, "escape-3ds.appspot.com", "/", 24)
+	cookie := NewCookie("escape3ds", sessionId, "localhost", "/", 24)
 	http.SetCookie(w, cookie)
 }
 
@@ -398,15 +417,11 @@ func getSession(c appengine.Context, r *http.Request) string {
  * @param {string} sessionId
  */
 func closeSession(c appengine.Context, w http.ResponseWriter, r *http.Request) {
-	// クッキーからセッションIDを取得する
 	sessionId := getSession(c, r)
-	
-	// クッキーを削除する
-	deleteCookie(w)
-	
-	// memcache から削除する
+		
 	model := NewModel(c)
 	model.removeSession(sessionId)
+	deleteCookie(w)
 }
 
 /**
@@ -415,7 +430,7 @@ func closeSession(c appengine.Context, w http.ResponseWriter, r *http.Request) {
  * @param {http.ResponseWriter} w 応答先
  */
 func deleteCookie(w http.ResponseWriter) {
-	cookie := NewCookie("escape3ds", "", "escape-3ds.appspot.com", "/", -1)
+	cookie := NewCookie("escape3ds", "", "localhost", "/", -1)
 	http.SetCookie(w, cookie)
 }
 
