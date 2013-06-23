@@ -455,16 +455,40 @@ func (this *Model) startSession(userKey string) string {
 	data["u"] = userKey
 	data["e"] = expire.String()
 	
-	session := make(map[string]map[string]string, 1)
-	session[sessionId] = data
-	
-	encodedSession, err := json.Marshal(session)
+	encodedData, err := json.Marshal(data)
 	item := &memcache.Item {
 		Key: sessionId,
-		Value: encodedSession,
+		Value: encodedData,
 	}
 	err = memcache.Set(this.c, item)
 	check(this.c, err)
 	
 	return sessionId
+}
+
+/**
+ * memcache から指定されたセッション情報を削除する
+ * @method
+ * @memberof Model
+ * @param {string} sessionId 対象のセッションID
+ */
+func (this *Model) removeSession(sessionId string) {
+	err := memcache.Delete(this.c, sessionId)
+	check(this.c, err)
+}
+
+/**
+ * memcache からユーザキーを返す
+ * @method
+ * @memberof Model
+ * @param {string} sessionId セッションID
+ * @returns {string} ユーザキー
+ */
+func (this *Model) getUserKeyFromSession(sessionId string) string {
+	item, err := memcache.Get(this.c, sessionId)
+	check(this.c, err)
+	data := make(map[string]string, 2)
+	err = json.Unmarshal(item.Value, data)
+	check(this.c, err)
+	return data["u"]
 }

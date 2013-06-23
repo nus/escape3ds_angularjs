@@ -32,7 +32,7 @@ func top(w http.ResponseWriter, r *http.Request) {
  */
 func loginTwitter(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
-	oauth := NewOAuth1(c, "http://escape-3ds.appspot.com/callback_twitter")
+	oauth := NewOAuth1(c, fmt.Sprintf("http://escape-3ds.appspot.com/callback_twitter"))
 	result := oauth.requestToken("https://api.twitter.com/oauth/request_token")
 	oauth.authenticate(w, r, "https://api.twitter.com/oauth/authenticate", result["oauth_token"])
 }
@@ -54,17 +54,13 @@ func callbackTwitter(w http.ResponseWriter, r *http.Request) {
 	
 	if result["oauth_token"] != "" {
 		// ログイン成功
+		key := ""
 		if model.existOAuthUser("Twitter", result["user_id"]) {
 			// 既存ユーザ
 			params := make(map[string]string, 2)
 			params["Type"] = "Twitter"
 			params["OAuthId"] = result["user_id"]
-			key := model.getUserKey(params)
-			if key != "" {
-				view.editor(key)
-			} else {
-				c.Errorf("既存のTwitterのアカウントを検索出来ませんでした")
-			}
+			key = model.getUserKey(params)
 		} else {
 			// 新規ユーザ
 			params := make(map[string]string, 4)
@@ -73,9 +69,12 @@ func callbackTwitter(w http.ResponseWriter, r *http.Request) {
 			params["user_oauth_id"] = result["user_id"]
 			params["user_pass"] = ""
 			user := model.NewUser(params)
-			key := model.addUser(user)
-			view.editor(key)
+			key = model.addUser(user)
 		}
+		if getSession(c, r) == "" {
+			startSession(w, r, key)
+		}
+		view.editor(key)
 	} else {
 		// ログイン失敗
 		view.login()
@@ -120,6 +119,7 @@ func requestFacebookToken(w http.ResponseWriter, r *http.Request) map[string]str
 	result := make(map[string]string, 2)
 	result["oauth_id"] = userInfo.Id
 	result["name"] = userInfo.Name
+	
 	return result
 }
 
@@ -182,8 +182,14 @@ func login(w http.ResponseWriter, r *http.Request) {
 	model := NewModel(c)
 	key, _ := model.loginCheck(mail, pass)
 	if key != "" {
+		// ログイン成功
+		sessionId := getSession(c, r)
+		if sessionId == "" {
+			startSession(w, r, key)
+		}
 		fmt.Fprintf(w, `{"result":true, "to":"/gamelist?key=%s"}`, key)
 	} else {
+		// ログイン失敗
 		fmt.Fprintf(w, `{"result":false, "message":"メールアドレスまたはパスワードが間違っています"}`)
 	}
 }
@@ -211,6 +217,7 @@ func interimRegistration(w http.ResponseWriter, r *http.Request) {
 
 /**
  * 本登録する
+ * @function
  * @param {http.ResponseWriter} w 応答先
  * @param {*http.Request} r リクエスト
  */
@@ -227,6 +234,9 @@ func registration(w http.ResponseWriter, r *http.Request) {
 
 /**
  * Facebookからのコールバック
+ * @function
+ * @param {http.ResponseWriter} w 応答先
+ * @param {*http.Request} r リクエスト
  */
 func callbackFacebook(w http.ResponseWriter, r*http.Request) {
 	c := appengine.NewContext(r)
@@ -235,15 +245,13 @@ func callbackFacebook(w http.ResponseWriter, r*http.Request) {
 	model := NewModel(c)
 	view := NewView(c, w)
 	
+	key := ""
 	if model.existOAuthUser("Facebook", userInfo["oauth_id"]) {
-		// 既存のユーザ
+		// 既存ユーザ
 		params := make(map[string]string, 2)
 		params["OAuthId"] = userInfo["oauth_id"]
 		params["Type"] = "Facebook"
-		key := model.getUserKey(params)
-		if key != "" {
-			view.editor(key)
-		}
+		key = model.getUserKey(params)
 	} else {
 		// 新規ユーザ
 		params := make(map[string]string, 4)
@@ -252,9 +260,13 @@ func callbackFacebook(w http.ResponseWriter, r*http.Request) {
 		params["user_oauth_id"] = userInfo["oauth_id"]
 		params["user_pass"] = ""
 		user := model.NewUser(params)
-		key := model.addUser(user)
-		view.editor(key)
+		key = model.addUser(user)
 	}
+	
+	if getSession(c, r) == "" {
+		startSession(w, r, key)
+	}
+	view.editor(key)
 }
 
 /**
@@ -344,22 +356,17 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
  * セッションを開始する
  * ユーザーキーに関連付いたセッションIDを生成して memcache, cookie に保存する。
  * @function
+ * @param w {http.ResponseWriter} w 応答先
+ * @param r {*http.Request} r リクエスト
+ * @param {string} key ユーザのキー
  * @returns {string} セッションID
  */
-func startSession(w http.ResponseWriter, r *http.Request) {
+func startSession(w http.ResponseWriter, r *http.Request, key string) {
 	c := appengine.NewContext(r)
-	mail := r.FormValue("mail")
-	pass := r.FormValue("pass")
 	model := NewModel(c)
-	key, _ := model.loginCheck(mail, pass)
-	if key == "" {
-		return
-	}
 	sessionId := model.startSession(key)
-	cookie := NewCookie("escape3ds", sessionId, "localhost", "/*", 24)
+	cookie := NewCookie("escape3ds", sessionId, "escape-3ds.appspot.com", "/", 24)
 	http.SetCookie(w, cookie)
-	cookie, err := r.Cookie("CookieName")
-	check(c, err)
 }
 
 /**
@@ -368,6 +375,7 @@ func startSession(w http.ResponseWriter, r *http.Request) {
  * @function
  * @param {appengine.Context} c コンテキスト
  * @param {*http.Request} r リクエスト
+ * @returns {string} セッションIDまたは空文字
  */
 func getSession(c appengine.Context, r *http.Request) string {
 	var result string
@@ -384,6 +392,34 @@ func getSession(c appengine.Context, r *http.Request) string {
 }
 
 /**
+ * セッションを終了する
+ * @function
+ * @param
+ * @param {string} sessionId
+ */
+func closeSession(c appengine.Context, w http.ResponseWriter, r *http.Request) {
+	// クッキーからセッションIDを取得する
+	sessionId := getSession(c, r)
+	
+	// クッキーを削除する
+	deleteCookie(w)
+	
+	// memcache から削除する
+	model := NewModel(c)
+	model.removeSession(sessionId)
+}
+
+/**
+ * セッションIDが保存されたクッキーを削除する
+ * @function
+ * @param {http.ResponseWriter} w 応答先
+ */
+func deleteCookie(w http.ResponseWriter) {
+	cookie := NewCookie("escape3ds", "", "escape-3ds.appspot.com", "/", -1)
+	http.SetCookie(w, cookie)
+}
+
+/**
  * セッションチェック
  * ページ表示時に必ず実行する
  * クライアントがセッションIDを持っているかどうか調べて
@@ -392,7 +428,7 @@ func getSession(c appengine.Context, r *http.Request) string {
  * @function
  * @param {http.ResponseWriter} w 応答先
  * @param {*http.Request} r リクエスト
- * @returns {string}
+ * @returns {string} セッションID
  */
 func session(w http.ResponseWriter, r *http.Request) string {
 	c := appengine.NewContext(r)
@@ -403,3 +439,5 @@ func session(w http.ResponseWriter, r *http.Request) string {
 	}
 	return session
 }
+
+
