@@ -488,7 +488,7 @@ func (this *Model) getUserKeyFromSession(sessionId string) string {
 	item, err := memcache.Get(this.c, sessionId)
 	check(this.c, err)
 	data := make(map[string]string, 2)
-	err = json.Unmarshal(item.Value, data)
+	err = json.Unmarshal(item.Value, &data)
 	check(this.c, err)
 	return data["u"]
 }

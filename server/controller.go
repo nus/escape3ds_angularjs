@@ -306,8 +306,11 @@ func callbackFacebook(w http.ResponseWriter, r*http.Request) {
 func gamelist(w http.ResponseWriter, r *http.Request) {
 	session(w, r)
 	c := appengine.NewContext(r)
-	userKey := r.FormValue("key")
+	model := NewModel(c)
 	view := NewView(c, w)
+
+	sessionId := getSession(c, r)
+	userKey := model.getUserKeyFromSession(sessionId)
 	view.gamelist(userKey)
 }
 
@@ -322,6 +325,8 @@ func addGame(w http.ResponseWriter, r *http.Request) {
 	gameName := r.FormValue("game_name")
 	gameDescription := r.FormValue("game_description")
 	
+	c.Debugf("userKey: %s, game_name: %s, game_description: %s", userKey, gameName, gameDescription)
+	
 	model := NewModel(c)
 	params := make(map[string]string, 4)
 	params["name"] = gameName
@@ -330,6 +335,8 @@ func addGame(w http.ResponseWriter, r *http.Request) {
 	params["user_key"] = userKey
 	game := model.NewGame(params)
 	model.addGame(game)
+	
+	fmt.Fprintf(w, `{"name":"%s", "description":"%s"}`, gameName, gameDescription)
 }
 
 /**
