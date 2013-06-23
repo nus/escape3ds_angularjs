@@ -35,4 +35,5 @@ func init() {
 	// 管理者専用 Ajax
 	http.HandleFunc("/get_users", getUsers)
 	http.HandleFunc("/get_interim_users", getInterimUsers)
+	http.HandleFunc("/start_session", startSession)
 }

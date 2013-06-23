@@ -161,9 +161,16 @@ func addUser(w http.ResponseWriter, r *http.Request) {
  * @param {*http.Request} r リクエスト
  */
 func debug(w http.ResponseWriter, r *http.Request) {
+	cookie := NewCookie("CookieName", "CookieValue", "localhost", "/debug", 24)
+	http.SetCookie(w, cookie)
+	cookie, err := r.Cookie("CookieName")
+	
 	c := appengine.NewContext(r)
 	view := NewView(c, w)
 	view.debug()
+
+	check(c, err)
+	c.Debugf("%#v", cookie)
 }
 
 /**
@@ -336,4 +343,20 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 	bytes, err := json.Marshal(result)
 	check(c, err)
 	fmt.Fprintf(w, "%s", bytes)
+}
+
+/**
+ * セッションを開始する
+ * @function
+ */
+func startSession(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
+	mail := r.FormValue("mail")
+	pass := r.FormValue("pass")
+	model := NewModel(c)
+	key, _ := model.loginCheck(mail, pass)
+	if key == "" {
+		return
+	}
+	model.startSession(key)
 }

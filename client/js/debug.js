@@ -87,6 +87,27 @@ $(function() {
 		});
 	});
 	
+	// セッション作成
+	$('#start_session').click(function() {
+		var session = $('#session');
+		var mail = session.find('.mail').val();
+		var pass = session.find('.pass').val();
+		$.ajax('/start_session', {
+			method: 'POST',
+			dataType: 'json',
+			data: {
+				mail: mail,
+				pass: pass
+			},
+			success: function() {
+				console.log('成功');
+			},
+			error: function() {
+				console.log('error');
+			}
+		});
+	});
+	
 	// データの更新
 	var update = function() {
 		var interimUsers = $('#interim_users');

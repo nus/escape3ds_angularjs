@@ -17,6 +17,8 @@ import (
 	"encoding/binary"
 	"encoding/base64"
 	"crypto/sha1"
+	"time"
+	"fmt"
 )
 
 /**
@@ -302,4 +304,34 @@ func sendMail(c appengine.Context, sender string, to string, subject string, bod
 	
 	err := mail.Send(c, message)
 	check(c, err)
+}
+
+/**
+ * クッキーを作成する
+ * @function
+ * @param {string} name クッキーの名前
+ * @param {string} value クッキーの値
+ * @param {string} domain 有効ドメイン
+ * @param {string} path 有効ディレクトリ
+ * @param {int} hour 有効期限（時間）
+ */
+func NewCookie(name string, value string, domain string, path string, hour int) *http.Cookie {
+	duration := time.Hour * time.Duration(hour)
+	now := time.Now()
+	expire := now.Add(duration)
+	
+	cookie := new(http.Cookie)
+	cookie.Name = name
+	cookie.Value = value
+	cookie.Domain = domain
+	cookie.Path = path
+	cookie.Expires = expire
+	cookie.RawExpires = expire.Format(time.UnixDate)
+	cookie.MaxAge = 60 * 60 * hour
+	cookie.Secure = false
+	cookie.HttpOnly = true
+	cookie.Raw = fmt.Sprintf("%s=%s", cookie.Name, cookie.Value)
+	cookie.Unparsed = []string{cookie.Raw}
+	
+	return cookie
 }

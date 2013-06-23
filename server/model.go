@@ -7,9 +7,12 @@ package escape3ds
 import (
 	"appengine"
 	"appengine/datastore"
+	"appengine/memcache"
 	"strings"
 	"bytes"
 	"fmt"
+	"time"
+	"encoding/json"
 )
 
 /**
@@ -256,6 +259,7 @@ func (this *Model) getUser(encodedKey string) *User {
 	
 	return user
 }
+{"pPXn6CIweWaAQntn48uDzeLwAQusir6ezxppCqAQhvDrtOugodwAA":{"e":"2013-06-24 07:08:19.077514 +0000 UTC","u":"ag5kZXZ-ZXNjYXBlLTNkc3IKCxIEVXNlchgBDA"}}
 
 /**
  * ユーザを仮登録する
@@ -431,3 +435,37 @@ func (this *Model) getAllUser() map[string]*User {
 	return result
 }
 
+/**
+ * セッションを開始する
+ * memcache にセッションIDとユーザキーの対応を保存する
+ * セッションは最後のページアクセスから24時間有効
+ * 24時間経過したものは cron で定期的に削除される
+ * @method
+ * @memberof Model
+ * @param {string}
+ * @returns {string} セッションID
+ */
+func (this *Model) startSession(userKey string) string {
+	sessionId := ""
+	for i := 0; i < 4; i++ {
+		sessionId = fmt.Sprintf("%s%s", sessionId, getRandomizedString())
+	}
+	expire := time.Now().Add(time.Hour * 24)
+	
+	data := make(map[string]string, 2)
+	data["u"] = userKey
+	data["e"] = expire.String()
+	
+	session := make(map[string]map[string]string, 1)
+	session[sessionId] = data
+	
+	encodedSession, err := json.Marshal(session)
+	item := &memcache.Item {
+		Key: sessionId,
+		Value: encodedSession,
+	}
+	err = memcache.Set(this.c, item)
+	check(this.c, err)
+	
+	return sessionId
+}
