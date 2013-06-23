@@ -22,7 +22,13 @@ import (
 func top(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 	view := NewView(c, w)
-	view.login()
+	sessionId := getSession(c, r)
+
+	if sessionId != "" {
+		http.Redirect(w, r, "/gamelist", 302)
+	} else {
+		view.login()
+	}
 }
 
 /**
