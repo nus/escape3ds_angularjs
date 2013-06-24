@@ -15,10 +15,12 @@ import(
  * @class
  * @property {appengine.Context} c コンテキスト
  * @property {http.ResponseWriter} w 応答先
+ * @property {*http.Request} r リクエスト
  */
 type View struct {
 	c appengine.Context
 	w http.ResponseWriter
+	r *http.Request
 }
 
 /**
@@ -27,10 +29,11 @@ type View struct {
  * @param {appengine.Context} c コンテキスト
  * @returns {*View} 作成したView
  */
-func NewView(c appengine.Context, w http.ResponseWriter) *View {
+func NewView(c appengine.Context, w http.ResponseWriter, r *http.Request) *View {
 	view := new(View)
 	view.c = c
 	view.w = w
+	view.r = r
 	return view
 }
 
@@ -94,12 +97,15 @@ func (this *View) registration() {
  * ゲーム一覧の表示
  * @method
  * @memberof View
- * @param {string} userKey エンコード済みのユーザキー
  */
-func (this *View) gamelist(userKey string) {
+func (this *View) gamelist() {
+	model := NewModel(this.c)
+	
+	sessionId := getSession(this.c, this.r)
+	userKey := model.getUserKeyFromSession(sessionId)
+	gameList := model.getGameList(userKey)
+
 	t, err := template.ParseFiles("server/html/gamelist.html")
 	check(this.c, err)
-	m := make(map[string]string, 1)
-	m["Key"] = userKey
-	t.Execute(this.w, m)
+	t.Execute(this.w, gameList)
 }

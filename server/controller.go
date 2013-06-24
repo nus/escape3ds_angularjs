@@ -21,7 +21,7 @@ import (
  */
 func top(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
-	view := NewView(c, w)
+	view := NewView(c, w, r)
 	sessionId := getSession(c, r)
 
 	if sessionId != "" {
@@ -55,7 +55,7 @@ func callbackTwitter(w http.ResponseWriter, r *http.Request) {
 	oauth := NewOAuth1(c, "http://escape-3ds.appspotcom/callback_twitter")
 	result := oauth.exchangeToken(token, verifier, "https://api.twitter.com/oauth/access_token")
 	
-	view := NewView(c, w)
+	view := NewView(c, w, r)
 	model := NewModel(c)
 	
 	if result["oauth_token"] != "" {
@@ -138,7 +138,7 @@ func editor(w http.ResponseWriter, r *http.Request) {
 	session(w, r)
 	c := appengine.NewContext(r)
 	key := r.FormValue("key")
-	view := NewView(c, w)
+	view := NewView(c, w, r)
 	view.editor(key)
 }
 
@@ -169,7 +169,7 @@ func addUser(w http.ResponseWriter, r *http.Request) {
  */
 func debug(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
-	view := NewView(c, w)
+	view := NewView(c, w, r)
 	view.debug()
 }
 
@@ -219,7 +219,7 @@ func logout(w http.ResponseWriter, r *http.Request) {
 	model.removeSession(sessionId)
 	deleteCookie(w)
 	
-	view := NewView(c, w)
+	view := NewView(c, w, r)
 	view.login()
 }
 
@@ -240,7 +240,7 @@ func interimRegistration(w http.ResponseWriter, r *http.Request) {
 	
 	sendMail(c, "infomation@escape-3ds.appspotmail.com", mail, "仮登録完了のお知らせ", fmt.Sprintf(config["interimMailBody"], name, key))
 	
-	view := NewView(c, w)
+	view := NewView(c, w, r)
 	view.interimRegistration()
 }
 
@@ -257,7 +257,7 @@ func registration(w http.ResponseWriter, r *http.Request) {
 	model := NewModel(c)
 	model.registration(key)
 	
-	view := NewView(c, w)
+	view := NewView(c, w, r)
 	view.registration()
 }
 
@@ -272,7 +272,7 @@ func callbackFacebook(w http.ResponseWriter, r*http.Request) {
 	userInfo := requestFacebookToken(w, r)
 	
 	model := NewModel(c)
-	view := NewView(c, w)
+	view := NewView(c, w, r)
 	
 	key := ""
 	if model.existOAuthUser("Facebook", userInfo["oauth_id"]) {
@@ -306,12 +306,8 @@ func callbackFacebook(w http.ResponseWriter, r*http.Request) {
 func gamelist(w http.ResponseWriter, r *http.Request) {
 	session(w, r)
 	c := appengine.NewContext(r)
-	model := NewModel(c)
-	view := NewView(c, w)
-
-	sessionId := getSession(c, r)
-	userKey := model.getUserKeyFromSession(sessionId)
-	view.gamelist(userKey)
+	view := NewView(c, w, r)
+	view.gamelist()
 }
 
 /**

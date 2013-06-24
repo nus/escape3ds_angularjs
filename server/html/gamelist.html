@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html ng-app>
 	<head>
 		<meta charset="utf-8">
 		<link rel="stylesheet" href="/client/css/gamelist.css"></link>
@@ -19,35 +19,20 @@
 		</div>
 		
 		<ul id="gamelist">
+			{{range .}}
 			<li class="game">
-				<div class="title">弟切草</div>
-				<div class="description">説明</div>
+				<div class="title">{{.Name}}</div>
+				<div class="description">{{.Description}}</div>
 				<div class="thumbnail"><img width="200" src="/client/img/living.png"></div>
 				<button class="edit">作る</button>
 				<button class="copy">コピー</button>
 				<button class="delete">消す</button>
 			</li>
-			
-			<li class="game">
-				<div class="title">弟切草</div>
-				<div class="description">説明</div>
-				<div class="thumbnail"><img width="200" src="/client/img/living.png"></div>
-				<button class="edit">作る</button>
-				<button class="copy">コピー</button>
-				<button class="delete">消す</button>
-			</li>
-			
-			<li class="game">
-				<div class="title">弟切草</div>
-				<div class="description">説明</div>
-				<div class="thumbnail"><img width="200" src="/client/img/living.png"></div>
-				<button class="edit">作る</button>
-				<button class="copy">コピー</button>
-				<button class="delete">消す</button>
-			</li>
+			{{end}}
 		</ul>
 		
 		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular.min.js"></script>
 		<script src="/client/js/gamelist.js"></script>
 		<script>
 			var userKey = "{{.Key}}";
