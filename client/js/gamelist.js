@@ -3,7 +3,8 @@
  * @file
  */
 $(function() {
-	// ゲームの新規作成
+
+	// ゲーム新規作成ボタン
 	$('#add_game').click(function() {
 		var div = $('#add_game_div');
 		var name = div.find('.name').val();
@@ -27,6 +28,27 @@ $(function() {
 			},
 			error: function(xhr, err) {
 				console.log(err);
+			}
+		});
+	});
+	
+	// ゲーム削除ボタン
+	$('.game .delete').click(function() {
+		if(!window.confirm('ゲームを削除しますか？')) {
+			return false;
+		}
+		var key = $(this).parent('.game').attr('key');
+		$.ajax('/delete_game', {
+			method: 'POST',
+			dataType: 'json',
+			data: {
+				game_key: key
+			},
+			error: function() {
+				console.log('delete game error');
+			},
+			success: function() {
+				console.log('success');
 			}
 		});
 	});

@@ -348,6 +348,8 @@ func (this *Model) getUserKey(params map[string]string) string {
 
 /**
  * データストアにゲームを追加する
+ * @method
+ * @memberof Model
  * @param {*Game} game 追加するゲーム
  * @returns {string} エンコード済みのゲームキー
  */
@@ -359,6 +361,38 @@ func (this *Model) addGame(game *Game) string {
 }
 
 /**
+ * データストアからゲームを取得する
+ * @method
+ * @memberof Model
+ * @param {string} encodedGameKey エンコード済みのゲームキー
+ * @returns {*Game} ゲームオブジェクト
+ */
+func (this *Model) getGame(encodedGameKey string) *Game {
+	gameKey, err := datastore.DecodeKey(encodedGameKey)
+	check(this.c, err)
+	
+	game := new(Game)
+	err = datastore.Get(this.c, gameKey, game)
+	check(this.c, err)
+	
+	return game
+}
+
+/**
+ * データストアからゲームを削除する
+ * 削除を命令したユーザとゲームの所有者が一致していることを事前に確認すること
+ * この関数内ではチェックを行わない
+ * @param {string} encodedGameKey エンコード済みのゲームキー
+ */
+func (this *Model) deleteGame(encodedGameKey string) {
+	gameKey, err := datastore.DecodeKey(encodedGameKey)
+	check(this.c, err)
+	
+	err = datastore.Delete(this.c, gameKey)
+	check(this.c, err)
+}
+
+/**
  * ユーザが所有しているゲーム一覧を返す
  * @method
  * @memberof Model
@@ -366,8 +400,7 @@ func (this *Model) addGame(game *Game) string {
  * @returns {map[string]*Game} エンコード済みのゲームキーとゲームの対応表
  */
 func (this *Model) getGameList(encodedUserKey string) map[string]*Game {
-	query := datastore.NewQuery("Game")
-	query.Filter("UserKey =", encodedUserKey)
+	query := datastore.NewQuery("Game").Filter("UserKey =", encodedUserKey)
 	iterator := query.Run(this.c)
 	
 	count, err := query.Count(this.c)

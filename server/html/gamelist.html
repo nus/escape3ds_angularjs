@@ -17,12 +17,11 @@
 			</div>
 			<button id="add_game">新規作成</button>
 		</div>
-		
 		<ul id="gamelist">
-			{{range .}}
-			<li class="game">
-				<div class="title">{{.Name}}</div>
-				<div class="description">{{.Description}}</div>
+			{{range $key, $val := .}}
+			<li class="game" key="{{$key}}">
+				<div class="title">{{$val.Name}}</div>
+				<div class="description">{{$val.Description}}</div>
 				<div class="thumbnail"><img width="200" src="/client/img/living.png"></div>
 				<button class="edit">作る</button>
 				<button class="copy">コピー</button>

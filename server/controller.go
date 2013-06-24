@@ -194,8 +194,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 		if sessionId == "" {
 			startSession(w, r, key)
 		}
-		c.Debugf("session id: %s", sessionId)
-		fmt.Fprintf(w, `{"result":true, "to":"/gamelist?key=%s"}`, key)
+		fmt.Fprintf(w, `{"result":true, "to":"/gamelist"}`)
 	} else {
 		// ログイン失敗
 		fmt.Fprintf(w, `{"result":false, "message":"メールアドレスまたはパスワードが間違っています"}`)
@@ -317,13 +316,25 @@ func gamelist(w http.ResponseWriter, r *http.Request) {
  */
 func addGame(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
-	userKey := r.FormValue("user_key")
 	gameName := r.FormValue("game_name")
 	gameDescription := r.FormValue("game_description")
 	
-	c.Debugf("userKey: %s, game_name: %s, game_description: %s", userKey, gameName, gameDescription)
+	if gameName == "" {
+		fmt.Fprintf(w, `{"result": false}`)
+		c.Warningf("空のゲーム名でゲームを作成しようとしました")
+	} else if gameDescription == "" {
+		fmt.Fprintf(w, `{"result": false}`)
+		c.Warningf("ゲーム説明文が空のゲームを作成しようとしました")
+	}
+
+	sessionId := getSession(c, r)
+	if sessionId == "" {
+		fmt.Fprintf(w, `{"result": false}`)
+		c.Warningf("セッションIDなしでゲームを作成しようとしました")
+	}
 	
 	model := NewModel(c)
+	userKey := model.getUserKeyFromSession(sessionId)
 	params := make(map[string]string, 4)
 	params["name"] = gameName
 	params["description"] = gameDescription
@@ -332,7 +343,41 @@ func addGame(w http.ResponseWriter, r *http.Request) {
 	game := model.NewGame(params)
 	model.addGame(game)
 	
-	fmt.Fprintf(w, `{"name":"%s", "description":"%s"}`, gameName, gameDescription)
+	fmt.Fprintf(w, `{"result":true, "name":"%s", "description":"%s"}`, gameName, gameDescription)
+}
+
+/**
+ * ゲームの削除
+ * ゲームの所有者しか削除することはできない
+ * @param {http.ResponseWriter} w 応答先
+ * @param {*http.Request} r リクエスト
+ */
+func deleteGame(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
+	sessionId := getSession(c, r)
+	gameKey := r.FormValue("game_key")
+	
+	if sessionId == "" {
+		fmt.Fprintf(w, `{"result":false}`)
+		c.Warningf("セッションIDなしで deleteGame() が呼び出されました")
+		return
+	} else if gameKey == "" {
+		fmt.Fprintf(w, `{"result":false}`)
+		c.Warningf("ゲームキー無しで deleteGame() が呼び出されました")
+		return
+	}
+	
+	model := NewModel(c)
+	userKey := model.getUserKeyFromSession(sessionId)
+	game := model.getGame(gameKey)
+	if game.UserKey != userKey {
+		fmt.Fprintf(w, `{"result":false}`)
+		c.Warningf("ユーザキー: %s が他のユーザのゲームを削除しようとしました", userKey)
+		return
+	}
+	
+	model.deleteGame(gameKey)
+	fmt.Fprintf(w, `{"result":true}`)
 }
 
 /**
