@@ -1,59 +1,113 @@
-header {
+* {
+	margin: 0px;
+	padding: 0px;
 }
 
-#content {
-	display: -webkit-box;
+header {
+	padding: 5px;
+}
+#game_title {
+	float: left;
+}
+header #buttons {
+	float: right;
+}
+header #buttons button {
+	height: 40px;
+	padding: 5px;
+	margin: 2px;
+}
+hr {
+	clear: both;
 }
 
 #scene_list {
-	color: white;
-	width: 150px;
-	height: 480px;
-}
-
-#scene_list>ul {
-	padding-left: 0px;
-}
-
-#scene_list>ul>li {
+	margin: 10px;
+	padding: 5px;
+	width: 200px;
+	position: absolute;
+	left: 0px;
 	list-style-type: none;
-	background-image: -webkit-linear-gradient(bottom, black, gray);
-	height: 30px;
 }
-
-#main {
-	width: 350px;
-	height: 480px;
+#scene_list .scene_img {
+	width: 75px;
+	float: left;
 }
-
-#main>h1 {
-	text-align: center;
+#scene_list li {
+	clear: both;
+	padding: 5px;
+	border-style: solid;
+	border-width: 1px;
 }
 
 #scene {
+	margin-top: 15px;
+	position: absolute;
+	left: 250px;
 	width: 320px;
 	height: 212px;
-	margin-left: auto;
-	margin-right: auto;
 	background-color: black;
-	color: white;
-	text-align: center;
-	line-height: 200px;
-	font-family: sans-serif;
 }
 
-#info {
-	width: 320px;
-	margin-left: auto;
-	margin-right: auto;
-	height: 100%;
+#scene_info {
+	position: absolute;
+	left: 250px;
+	top: 290px;
+}
+#scene_info .scene_img {
+	width: 75px;
+}
+#scene_info button {
+	padding: 5px;
+	margin: 2px;
 }
 
 #event {
-	width: 300px;
-	height: 480px;
+	margin-top: 15px;
+	position: absolute;
+	left: 600px;
+}
+#event div {
+	margin-bottom: 5px;
+}
+#event input {
+	margin-left: 10px;
 }
 
-#event>h1 {
-	text-align: center;
+#item_list {
+	margin: 10px;
+	padding: 5px;
+	width: 200px;
+	position: absolute;
+	left: 0px;
+	list-style-type: none;
+}
+#item_list li {
+	clear: both;
+	padding: 5px;
+	border-style: solid;
+	border-width: 1px;
+}
+#item_list .item_img {
+	width: 75px;
+	float: left;
+}
+
+#item_preview {
+	margin-top: 15px;
+	position: absolute;
+	left: 250px;
+	width: 320px;
+	height: 213px;
+	background-color: black;
+}
+
+#item_info {
+	position: absolute;
+	left: 250px;
+	top: 290px;
+}
+#item_info button {
+	padding: 5px;
+	margin: 2px;
 }

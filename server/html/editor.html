@@ -3,20 +3,24 @@
 	<head>
 		<meta charset="utf-8">
 		<title>ESCPAE 3DS</title>
+		<link rel="stylesheet" href="/client/css/editor.css"></link>
 	</head>
 	<body>
 		<header>
 			<h1 id="game_title">ゲームのタイトル</h1>
-			<button id="scene_mode">シーン管理</button>
-			<button id="item_mode">アイテム管理</button>
-			<button id="back">ゲーム一覧へ戻る</button>
-			<button id="save">ゲームを保存</button>
+			<div id="buttons">
+				<button id="scene_mode">シーン管理</button>
+				<button id="item_mode">アイテム管理</button>
+				<button id="back">ゲーム一覧へ戻る</button>
+				<button id="save">ゲームを保存</button>
+			</div>
 		</header>
 		<hr>
+
 		<section id="scene_editor">
 			<ul id="scene_list">
 				<li>
-					<img class="scene_img" src="/client/img/living.png" width="150">
+					<img class="scene_img" src="/client/img/living.png">
 					<div>シーン<span class="scene_id">0001</span></div>
 					<div class="scene_name">リビング</div>
 					<div class="is_first_scene"></div>
@@ -42,15 +46,14 @@
 			</div>
 			
 			<div id="scene_info">
-				<div>シーンID: <span class="scene_id"></span></div>
 				<div>
 					シーン名: <input class="scene_name" type="text"></input>
 					<button id="change_scene_name">変更</button>
 				</div>
 				<div><label>ゲーム開始時のシーンにする <input class="#is_first_scene" type="checkbox"></input></label></div>
 				<div>背景画像:
-					<img classs=".scene_img" src="/client/img/living.png" width="150">
 					<input id="change_scene_img" type="file"></input>
+					<div><img class="scene_img" src="/client/img/living.png"></div>
 				</div>
 				<div><button id="edit_enter_event">シーン開始時のイベント</button></div>
 				<div><button id="edit_leave_event">シーン終了時のイベント</button></div>
@@ -59,7 +62,6 @@
 			</div>
 			
 			<div id="event">
-				<h2>イベント</h2>
 				<div>イベント名: <input class="event_name" type="text"></input></div>
 				<div>
 					<div>画像</div>
@@ -70,7 +72,8 @@
 					<div><label><input class="off" name="event_img" type="radio" value="off">なし</input></label></div>
 				</div>
 				<div id="#event_editor">
-					<textarea></textarea>
+					<div>内容</div>
+					<textarea rows="25" cols="35"></textarea>
 				</div>
 			</div>
 		</section>
