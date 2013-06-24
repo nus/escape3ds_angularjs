@@ -21,7 +21,7 @@ import (
  */
 func top(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
-	view := NewView(c, w, r)
+	view := NewView(c, w)
 	sessionId := getSession(c, r)
 
 	if sessionId != "" {
@@ -55,7 +55,7 @@ func callbackTwitter(w http.ResponseWriter, r *http.Request) {
 	oauth := NewOAuth1(c, "http://escape-3ds.appspotcom/callback_twitter")
 	result := oauth.exchangeToken(token, verifier, "https://api.twitter.com/oauth/access_token")
 	
-	view := NewView(c, w, r)
+	view := NewView(c, w)
 	model := NewModel(c)
 	
 	if result["oauth_token"] != "" {
@@ -130,16 +130,66 @@ func requestFacebookToken(w http.ResponseWriter, r *http.Request) map[string]str
 }
 
 /**
+ * Facebookからのコールバック
+ * @function
+ * @param {http.ResponseWriter} w 応答先
+ * @param {*http.Request} r リクエスト
+ */
+func callbackFacebook(w http.ResponseWriter, r*http.Request) {
+	c := appengine.NewContext(r)
+	userInfo := requestFacebookToken(w, r)
+	
+	model := NewModel(c)
+	view := NewView(c, w)
+	
+	key := ""
+	if model.existOAuthUser("Facebook", userInfo["oauth_id"]) {
+		// 既存ユーザ
+		params := make(map[string]string, 2)
+		params["OAuthId"] = userInfo["oauth_id"]
+		params["Type"] = "Facebook"
+		key = model.getUserKey(params)
+	} else {
+		// 新規ユーザ
+		params := make(map[string]string, 4)
+		params["user_type"] = "Facebook"
+		params["user_name"] = userInfo["name"]
+		params["user_oauth_id"] = userInfo["oauth_id"]
+		params["user_pass"] = ""
+		user := model.NewUser(params)
+		key = model.addUser(user)
+	}
+	
+	if getSession(c, r) == "" {
+		startSession(w, r, key)
+	}
+	view.editor(key)
+}
+
+/**
  * エディタの表示
  * @param {http.ResponseWRiter} w 応答先
  * @param {*http.Request} r リクエスト
  */
 func editor(w http.ResponseWriter, r *http.Request) {
-	session(w, r)
+	userKey := session(w, r)
 	c := appengine.NewContext(r)
-	key := r.FormValue("key")
-	view := NewView(c, w, r)
-	view.editor(key)
+	model := NewModel(c)
+
+	gameKey := r.FormValue("game_key")
+	if gameKey == "" {
+		c.Warningf("ゲームキー無しでゲームを編集しようとしました")
+		http.Redirect(w, r, "/", 302)
+	}
+	
+	game := model.getGame(gameKey)
+	if game.UserKey != userKey {
+		c.Warningf("ユーザキー: %s が他人のゲーム: %s を編集しようとしました", userKey, gameKey)
+		http.Redirect(w, r, "/gamelist", 302)
+	}
+	
+	view := NewView(c, w)
+	view.editor(gameKey)
 }
 
 /**
@@ -169,7 +219,7 @@ func addUser(w http.ResponseWriter, r *http.Request) {
  */
 func debug(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
-	view := NewView(c, w, r)
+	view := NewView(c, w)
 	view.debug()
 }
 
@@ -218,8 +268,7 @@ func logout(w http.ResponseWriter, r *http.Request) {
 	model.removeSession(sessionId)
 	deleteCookie(w)
 	
-	view := NewView(c, w, r)
-	view.login()
+	http.Redirect(w, r, "/", 302)
 }
 
 /**
@@ -239,7 +288,7 @@ func interimRegistration(w http.ResponseWriter, r *http.Request) {
 	
 	sendMail(c, "infomation@escape-3ds.appspotmail.com", mail, "仮登録完了のお知らせ", fmt.Sprintf(config["interimMailBody"], name, key))
 	
-	view := NewView(c, w, r)
+	view := NewView(c, w)
 	view.interimRegistration()
 }
 
@@ -256,45 +305,8 @@ func registration(w http.ResponseWriter, r *http.Request) {
 	model := NewModel(c)
 	model.registration(key)
 	
-	view := NewView(c, w, r)
+	view := NewView(c, w)
 	view.registration()
-}
-
-/**
- * Facebookからのコールバック
- * @function
- * @param {http.ResponseWriter} w 応答先
- * @param {*http.Request} r リクエスト
- */
-func callbackFacebook(w http.ResponseWriter, r*http.Request) {
-	c := appengine.NewContext(r)
-	userInfo := requestFacebookToken(w, r)
-	
-	model := NewModel(c)
-	view := NewView(c, w, r)
-	
-	key := ""
-	if model.existOAuthUser("Facebook", userInfo["oauth_id"]) {
-		// 既存ユーザ
-		params := make(map[string]string, 2)
-		params["OAuthId"] = userInfo["oauth_id"]
-		params["Type"] = "Facebook"
-		key = model.getUserKey(params)
-	} else {
-		// 新規ユーザ
-		params := make(map[string]string, 4)
-		params["user_type"] = "Facebook"
-		params["user_name"] = userInfo["name"]
-		params["user_oauth_id"] = userInfo["oauth_id"]
-		params["user_pass"] = ""
-		user := model.NewUser(params)
-		key = model.addUser(user)
-	}
-	
-	if getSession(c, r) == "" {
-		startSession(w, r, key)
-	}
-	view.editor(key)
 }
 
 /**
@@ -303,10 +315,10 @@ func callbackFacebook(w http.ResponseWriter, r*http.Request) {
  * @param {*http.Request} r リクエスト
  */
 func gamelist(w http.ResponseWriter, r *http.Request) {
-	session(w, r)
+	userKey := session(w, r)
 	c := appengine.NewContext(r)
-	view := NewView(c, w, r)
-	view.gamelist()
+	view := NewView(c, w)
+	view.gamelist(userKey)
 }
 
 /**
@@ -497,16 +509,26 @@ func deleteCookie(w http.ResponseWriter) {
  * @function
  * @param {http.ResponseWriter} w 応答先
  * @param {*http.Request} r リクエスト
- * @returns {string} セッションID
+ * @returns {string} ユーザキー
  */
 func session(w http.ResponseWriter, r *http.Request) string {
 	c := appengine.NewContext(r)
-	session := getSession(c, r)
-	if session == "" {
+	sessionId := getSession(c, r)
+	if sessionId == "" {
+		c.Warningf("セッションIDなしで内部へ入ろうとしました")
 		http.Redirect(w, r, "/", 302)
 		return ""
 	}
-	return session
+	
+	model := NewModel(c)
+	userKey := model.getUserKeyFromSession(sessionId)
+	if userKey == "" {
+		c.Warningf("セッションID: %s に該当するユーザーキが存在しません")
+		http.Redirect(w, r, "/", 302)
+		return ""
+	}
+	
+	return userKey
 }
 
 

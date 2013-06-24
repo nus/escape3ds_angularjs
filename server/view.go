@@ -20,20 +20,19 @@ import(
 type View struct {
 	c appengine.Context
 	w http.ResponseWriter
-	r *http.Request
 }
 
 /**
  * View の作成
  * @function
  * @param {appengine.Context} c コンテキスト
+ * @param {http.ResponseWriter} w 応答先
  * @returns {*View} 作成したView
  */
-func NewView(c appengine.Context, w http.ResponseWriter, r *http.Request) *View {
+func NewView(c appengine.Context, w http.ResponseWriter) *View {
 	view := new(View)
 	view.c = c
 	view.w = w
-	view.r = r
 	return view
 }
 
@@ -97,14 +96,12 @@ func (this *View) registration() {
  * ゲーム一覧の表示
  * @method
  * @memberof View
+ * @param {string} userKey
  */
-func (this *View) gamelist() {
+func (this *View) gamelist(userKey string) {
 	model := NewModel(this.c)
-	
-	sessionId := getSession(this.c, this.r)
-	userKey := model.getUserKeyFromSession(sessionId)
 	gameList := model.getGameList(userKey)
-
+	
 	t, err := template.ParseFiles("server/html/gamelist.html")
 	check(this.c, err)
 	t.Execute(this.w, gameList)
