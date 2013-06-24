@@ -29,6 +29,10 @@ hr {
 	left: 0px;
 	list-style-type: none;
 }
+#scene_list button {
+	padding: 3px;
+	margin-bottom: 3px;
+}
 #scene_list .scene_img {
 	width: 75px;
 	float: left;
